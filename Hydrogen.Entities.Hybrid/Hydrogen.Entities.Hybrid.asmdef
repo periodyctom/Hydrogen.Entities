@@ -1,0 +1,17 @@
+{
+    "name": "Hydrogen.Entities.Hybrid",
+    "references": [
+        "GUID:8819f35a0fc84499b990e90a4ca1911f",
+        "GUID:734d92eba21c94caba915361bd5ac177",
+        "GUID:e0cd26848372d4e5c891c569017e11f1",
+        "GUID:7e90c1c4e0c0d2d42be96bd86a25e3ac"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": true,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": false,
+    "defineConstraints": [],
+    "versionDefines": []
+}

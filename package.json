@@ -1,0 +1,20 @@
+{
+	"name": "com.periodyc.hydrogen.entities",
+	"version": "0.1.0",
+	"displayName": "Periodyc Hydrogen Entities",
+	"description": "A collection of helpers for working with Unity's ECS framework.",
+	"unity": "2019.3",
+	"dependencies": {
+		"com.unity.entities": "0.1.1-preview",
+		"com.unity.collections": "0.1.1-preview",
+		"com.unity.jobs": "0.1.1-preview"
+	},
+	"keywords": [
+		"entities"
+	],
+	"author": {
+		"name": "Thomas Key",
+		"email": "thomas.key@periodyc.com",
+		"url": "https://www.periodyc.com"
+	}
+}

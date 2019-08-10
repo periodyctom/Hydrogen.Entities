@@ -1,2 +1,2 @@
 # Hydrogen.Entities
-A collection of helpers for work with Unity's ECS framework, used in our games.
+A collection of helpers for working with Unity's ECS framework, particularly in setup and configuration authoring. 
