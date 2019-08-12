@@ -26,7 +26,7 @@ namespace Hydrogen.Entities
 
     // TODO: Handle multi-type conversions IE SO T0 -> T1 and T2. Hash the types for the conversion entry.
     // TODO: Handle multi-type conversions with Delegates. Hash the type and delegate type for the conversion entry.
-    // TODO: Handle Acyclic graphs. Someone will try to do that eventually. Probably me?
+    // TODO: Handle Acyclic graphs? Someone will try to do that eventually. Probably me?
     // TODO: Test interactions with the GO system for prefabs.
 
     /// <summary>
