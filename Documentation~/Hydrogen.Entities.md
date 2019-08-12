@@ -83,5 +83,5 @@ Derives from ```ConfigSingleton<T0, T1, T2>``` and automatically creates a ```Co
 ## ```ManualConfigSingleton<T0, T1, T2>```
 Derives from ```ConvertSingleton<T0, T1>``` but handles the conversion with ScriptToBlob delegate returned from the user-implemented ManualConversion property. This allows the user to return pre-cached delegates or even select from a set of implementations if needed.
 
-### ManualConvertConfigSingleton
+### ```ManualConfigSingletonWithReload<T0, T1, T2>```
 Derives from ```ManualConfigSingleton<T0, T1, T2>``` and automatically creates a ```ConfigReload<T1, T2>``` singleton to force relevant ConfigSystem(s) to update. Only useful if the data is used to set Application-wide data once or very infrequently.
