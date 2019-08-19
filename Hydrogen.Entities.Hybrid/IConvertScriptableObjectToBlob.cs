@@ -13,10 +13,7 @@ namespace Hydrogen.Entities
         /// Defines the Conversion function to convert this to a <see cref="BlobAssetReference{T0}"/>.
         /// </summary>
         /// <param name="conversion">The <see cref="ScriptableObjectConversionSystem"/> doing the converting. Allows us to build reference chains to other converted blobs.</param>
-        /// <param name="goConversion">Provides access to the <see cref="GameObjectConversionSystem"/> if prefab conversion Entity Ids need to be obtained.</param>
         /// <returns>The constructed <see cref="BlobAssetReference{T0}"/></returns>
-        BlobAssetReference<T0> Convert(
-            ScriptableObjectConversionSystem conversion,
-            GameObjectConversionSystem goConversion);
+        BlobAssetReference<T0> Convert(ScriptableObjectConversionSystem conversion);
     }
 }

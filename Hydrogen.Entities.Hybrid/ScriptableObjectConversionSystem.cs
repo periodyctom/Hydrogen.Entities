@@ -19,14 +19,13 @@ namespace Hydrogen.Entities
     /// <typeparam name="T1">The struct type our Blob asset reference points to.</typeparam>
     public delegate BlobAssetReference<T1> ScriptToBlobFunc<in T0, T1>(
         T0 src,
-        ScriptableObjectConversionSystem convert,
-        GameObjectConversionSystem goConvert)
+        ScriptableObjectConversionSystem convert)
         where T0 : ScriptableObject
         where T1 : struct;
 
     // TODO: Handle multi-type conversions IE SO T0 -> T1 and T2. Hash the types for the conversion entry.
     // TODO: Handle multi-type conversions with Delegates. Hash the type and delegate type for the conversion entry.
-    // TODO: Handle Acyclic graphs? Someone will try to do that eventually. Probably me?
+    // TODO: Handle Acyclic graphs? Someone will try to do that eventually. Probably me...
     // TODO: Test interactions with the GO system for prefabs.
 
     /// <summary>
@@ -74,6 +73,8 @@ namespace Hydrogen.Entities
 
         private GameObjectConversionSystem _goConversionSystem;
 
+        public GameObjectConversionSystem GoConversionSystem => _goConversionSystem;
+
         protected override void OnCreate()
         {
             _goConversionSystem = World.GetExistingSystem<GameObjectConversionSystem>();
@@ -100,7 +101,7 @@ namespace Hydrogen.Entities
             using (_createBlob.Auto())
 #endif
             {
-                BlobAssetReference<T0> assetReference = src.Convert(this, _goConversionSystem);
+                BlobAssetReference<T0> assetReference = src.Convert(this);
 
                 return BlobData.Create(assetReference);
             }
@@ -114,7 +115,7 @@ namespace Hydrogen.Entities
             using (_createBlobWithFunc.Auto())
 #endif
             {
-                BlobAssetReference<T1> assetReference = func.Invoke(obj, this, _goConversionSystem);
+                BlobAssetReference<T1> assetReference = func.Invoke(obj, this);
 
                 return BlobData.Create(assetReference);
             }
@@ -209,6 +210,27 @@ namespace Hydrogen.Entities
             return obj != null
                 && _scriptableToBlob.TryGetValue(obj.GetInstanceID(), out BlobData data)
                 && data.BlobTypeHashCode == typeof(T1).GetHashCode();
+        }
+    }
+    
+    public static class BlobConvertHelpers
+    {
+        public static void Copy<T>(in BlobBuilder builder, ref BlobArray<T> dst, T[] src)
+            where T : struct
+        {
+            int len = src?.Length ?? 0;
+        
+            if (len > 0)
+            {
+                BlobBuilderArray<T> array = builder.Allocate(len, ref dst);
+        
+                for (int i = 0; i < len; i++)
+                    array[i] = src[i];
+            }
+            else
+            {
+                dst = new BlobArray<T>();
+            }
         }
     }
 }
