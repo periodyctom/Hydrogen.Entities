@@ -19,6 +19,8 @@ namespace Titanium.Core
     {
         [SerializeField] private T0 _configDefinition;
 
+        public T0 ConfigDefinition => _configDefinition;
+
         private static bool _converted = false;
 
         protected abstract T1 ConvertDefinition(
@@ -40,7 +42,7 @@ namespace Titanium.Core
         {
             // TODO: Give option for singleton destroy/recreate if data exists
             // and we convert another singleton of the same kind?
-            if(_converted) return;
+            if(_converted) return; // TODO: Get rid of this ASAP, breaks run all tests for input system.
             
             NativeArray<ComponentType> comps = dstManager.GetComponentTypes(entity);
 
