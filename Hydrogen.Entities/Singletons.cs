@@ -27,6 +27,33 @@ namespace Hydrogen.Entities
             return entity;
         }
 
+        public static bool DoesSingletonExist<T0>(EntityManager manager)
+            where T0 : struct, IComponentData
+        {
+            ComponentType type = typeof(T0);
+            EntityQuery query = manager.CreateEntityQuery(type);
+
+            int entityCount = query.CalculateEntityCount();
+            bool result = entityCount > 0;
+            
+            query.Dispose();
+
+            return result;
+        }
+
+        public static void DestroySingleton<T0>(EntityManager manager)
+            where T0 : struct, IComponentData
+        {
+            ComponentType type = typeof(T0);
+            EntityQuery query = manager.CreateEntityQuery(type);
+            
+            int entityCount = query.CalculateEntityCount();
+            bool result = entityCount > 0;
+            
+            if(result)
+                manager.DestroyEntity(query.GetSingletonEntity());
+        }
+
         /// <summary>
         /// Does the boilerplate work of creating a singleton <see cref="Entity"/> for the given type.
         /// Also returns the <see cref="EntityQuery"/> used to create it for further use.

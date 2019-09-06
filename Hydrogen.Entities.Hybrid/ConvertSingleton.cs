@@ -17,11 +17,10 @@ namespace Titanium.Core
         where T0 : ScriptableObject
         where T1 : struct, IComponentData
     {
-        [SerializeField] private T0 _configDefinition;
+        [SerializeField, Tooltip("Source ScriptableObject for our converted data.")] private T0 _configDefinition;
+        [SerializeField, Tooltip("If the singleton already exists, we don't convert this one. Default action is replacement.")] private bool m_DontReplaceIfPresent;
 
         public T0 ConfigDefinition => _configDefinition;
-
-        private static bool _converted = false;
 
         protected abstract T1 ConvertDefinition(
             EntityManager dstManager,
@@ -40,10 +39,6 @@ namespace Titanium.Core
             EntityManager dstManager,
             GameObjectConversionSystem conversionSystem)
         {
-            // TODO: Give option for singleton destroy/recreate if data exists
-            // and we convert another singleton of the same kind?
-            if(_converted) return; // TODO: Get rid of this ASAP, breaks run all tests for input system.
-            
             NativeArray<ComponentType> comps = dstManager.GetComponentTypes(entity);
 
             int len = comps.Length;
@@ -54,6 +49,17 @@ namespace Titanium.Core
                 dstManager.RemoveComponent(entity, comps[i]);
             
             comps.Dispose();
+            
+            bool doesSingletonExist = Singletons.DoesSingletonExist<T1>(dstManager);
+
+            if (doesSingletonExist && !m_DontReplaceIfPresent)
+            {
+                Singletons.DestroySingleton<T1>(dstManager);
+            }
+            else if(doesSingletonExist && m_DontReplaceIfPresent)
+            {
+                return;
+            }
 
             Assert.IsNotNull(_configDefinition);
             T1 configData = ConvertDefinition(dstManager, entity, conversionSystem, _configDefinition);
@@ -61,8 +67,6 @@ namespace Titanium.Core
             Singletons.MakeSingleton(dstManager, entity, configData);
             
             OnPostCreateSingleton(dstManager, entity);
-
-            _converted = true;
         }
 
         /// <summary>
