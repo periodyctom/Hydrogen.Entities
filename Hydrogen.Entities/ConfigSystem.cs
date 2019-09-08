@@ -1,4 +1,6 @@
+using System.Diagnostics.CodeAnalysis;
 using Unity.Entities;
+// ReSharper disable UnusedMember.Global
 
 namespace Hydrogen.Entities
 {

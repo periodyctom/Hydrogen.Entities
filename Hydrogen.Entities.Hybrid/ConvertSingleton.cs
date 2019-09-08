@@ -1,10 +1,9 @@
-using Hydrogen.Entities;
 using Unity.Collections;
 using Unity.Entities;
 using UnityEngine;
 using UnityEngine.Assertions;
 
-namespace Titanium.Core
+namespace Hydrogen.Entities
 {
     /// <summary>
     /// Defines a Conversion from a <see cref="ScriptableObject"/> to a singleton component data.

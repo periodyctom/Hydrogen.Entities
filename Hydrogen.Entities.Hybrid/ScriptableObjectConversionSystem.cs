@@ -222,8 +222,11 @@ namespace Hydrogen.Entities
         
             if (len > 0)
             {
-                BlobBuilderArray<T> array = builder.Allocate(len, ref dst);
+                // ReSharper disable once PossiblyImpureMethodCallOnReadonlyVariable
+                BlobBuilderArray<T> array = builder.Allocate(ref dst, len);
         
+                Assert.IsNotNull(src);
+                
                 for (int i = 0; i < len; i++)
                     array[i] = src[i];
             }
