@@ -1,3 +1,4 @@
+using System;
 using Unity.Collections;
 using Unity.Entities;
 using UnityEngine;
@@ -83,6 +84,7 @@ namespace Hydrogen.Entities
     /// <typeparam name="T0">Source <see cref="ScriptableObject"/> concrete type, that implements <see cref="IConvertScriptableObjectToBlob{T0}"/></typeparam>
     /// <typeparam name="T1"><see cref="IConfigRef{T}"/> to create for our singleton that will hold our blob reference.</typeparam>
     /// <typeparam name="T2">Blob asset data type.</typeparam>
+    [Obsolete]
     public abstract class ConfigSingleton<T0, T1, T2> : ConvertSingleton<T0, T1>
         where T0 : ScriptableObject, IConvertScriptableObjectToBlob<T2>
         where T1 : struct, IConfigRef<T2>
@@ -111,6 +113,7 @@ namespace Hydrogen.Entities
     /// <typeparam name="T0">Concrete <see cref="ScriptableObject"/> type, that implements <see cref="IConvertScriptableObjectToBlob{T0}"/></typeparam>
     /// <typeparam name="T1"><see cref="IConfigRef{T}"/> to create for our singleton that will hold our blob reference.</typeparam>
     /// <typeparam name="T2">Blob asset data type.</typeparam>
+    [Obsolete]
     public abstract class ConfigSingletonWithReload<T0, T1, T2> : ConfigSingleton<T0, T1, T2>
         where T0 : ScriptableObject, IConvertScriptableObjectToBlob<T2>
         where T1 : struct, IConfigRef<T2>
@@ -128,6 +131,7 @@ namespace Hydrogen.Entities
     /// <typeparam name="T0">Concrete <see cref="ScriptableObject"/> type</typeparam>
     /// <typeparam name="T1"><see cref="IConfigRef{T}"/> to create for our singleton that will hold our blob reference.</typeparam>
     /// <typeparam name="T2">Blob asset data type.</typeparam>
+    [Obsolete]
     public abstract class ManualConfigSingleton<T0, T1, T2> : ConvertSingleton<T0, T1>
         where T0 : ScriptableObject
         where T1 : struct, IConfigRef<T2>
@@ -163,6 +167,7 @@ namespace Hydrogen.Entities
     /// <typeparam name="T0">Concrete <see cref="ScriptableObject"/> type.</typeparam>
     /// <typeparam name="T1"><see cref="IConfigRef{T}"/> to create for our singleton that will hold our blob reference.</typeparam>
     /// <typeparam name="T2">Blob asset data type.</typeparam>
+    [Obsolete]
     public abstract class ManualConfigSingletonWithReload<T0, T1, T2> : ManualConfigSingleton<T0, T1, T2>
         where T0 : ScriptableObject
         where T1 : struct, IConfigRef<T2>

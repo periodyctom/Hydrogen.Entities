@@ -14,6 +14,12 @@ namespace Hydrogen.Entities
         public readonly EntityArchetype Archetype;
         public readonly EntityQuery Query;
         public Entity Current;
+        
+        public bool Exists
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get => Current != Entity.Null;
+        }
 
         public SingletonHelper(EntityManager manager)
         {
@@ -36,11 +42,11 @@ namespace Hydrogen.Entities
 
         public void Create(T value)
         {
-            if (Current != Entity.Null)
+            if (Exists)
             {
                 Query.SetSingleton(value);
             }
-            else if(Current == Entity.Null)
+            else
             {
                 Current = Manager.CreateEntity(Archetype);
                 Query.SetSingleton(value);
@@ -49,7 +55,7 @@ namespace Hydrogen.Entities
 
         public void Destroy()
         {
-            if (Current == Entity.Null) return;
+            if (!Exists) return;
             Assert.IsTrue(Manager.IsCreated);
             
             Manager.DestroyEntity(Current);
@@ -58,10 +64,12 @@ namespace Hydrogen.Entities
 
         public void Dispose()
         {
+            Destroy();
             Query.Dispose();
         }
     }
     
+    [Obsolete("Use the new conversion systems framework and SingletonHelper<T> instead as it caches the query and has less redundancy. \nSee the tests for more details.")]
     public static class Singletons
     {
         /// <summary>
@@ -86,10 +94,10 @@ namespace Hydrogen.Entities
         }
 
         /// <summary>
-        /// 
+        /// Checks if the given <typeparamref name="T0"/> singleton is defined on the <see cref="EntityManager"/>
         /// </summary>
-        /// <param name="manager"></param>
-        /// <typeparam name="T0"></typeparam>
+        /// <param name="manager"><seealso cref="EntityManager"/> the singleton might belong to.</param>
+        /// <typeparam name="T0">The <see cref="IComponentData"/> struct defines the singleton data.</typeparam>
         /// <returns></returns>
         public static bool DoesSingletonExist<T0>(EntityManager manager)
             where T0 : struct, IComponentData
@@ -106,10 +114,10 @@ namespace Hydrogen.Entities
         }
 
         /// <summary>
-        /// 
+        /// Destroys the Singleton of <typeparamref name="T0"/>
         /// </summary>
-        /// <param name="manager"></param>
-        /// <typeparam name="T0"></typeparam>
+        /// <param name="manager"><seealso cref="EntityManager"/> the singleton belongs to.</param>
+        /// <typeparam name="T0">The <see cref="IComponentData"/> struct defines the singleton data.</typeparam>
         public static void DestroySingleton<T0>(EntityManager manager)
             where T0 : struct, IComponentData
         {

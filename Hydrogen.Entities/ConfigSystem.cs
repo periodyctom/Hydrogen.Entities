@@ -1,4 +1,4 @@
-using System.Diagnostics.CodeAnalysis;
+using System;
 using Unity.Entities;
 // ReSharper disable UnusedMember.Global
 
@@ -8,6 +8,7 @@ namespace Hydrogen.Entities
     /// Provides an convenience interface for components that have a primary blob asset reference.
     /// </summary>
     /// <typeparam name="T">Type of the blob asset.</typeparam>
+    [Obsolete]
     public interface IResolveRef<T> : IComponentData
         where T : struct
     {
@@ -21,6 +22,7 @@ namespace Hydrogen.Entities
     /// Used to define a component that holds a <see cref="BlobAssetReference{T}"/>
     /// </summary>
     /// <typeparam name="T">Type of the blob asset.</typeparam>
+    [Obsolete]
     public interface IConfigRef<T> : IResolveRef<T>
         where T : struct
     {
@@ -37,10 +39,12 @@ namespace Hydrogen.Entities
     /// </summary>
     /// <typeparam name="T0"></typeparam>
     /// <typeparam name="T1"></typeparam>
+    [Obsolete]
     public struct ConfigReload<T0, T1> : IComponentData
         where T0 : struct, IConfigRef<T1>
         where T1 : struct { }
 
+    [Obsolete]
     public abstract class ConfigSystem<T0, T1> : ComponentSystem
         where T0 : struct, IConfigRef<T1>
         where T1 : struct
