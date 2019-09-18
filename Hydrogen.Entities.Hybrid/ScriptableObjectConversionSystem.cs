@@ -23,8 +23,6 @@ namespace Hydrogen.Entities
         where T0 : ScriptableObject
         where T1 : struct;
 
-    // TODO: Handle multi-type conversions IE SO T0 -> T1 and T2. Hash the types for the conversion entry.
-    // TODO: Handle multi-type conversions with Delegates. Hash the type and delegate type for the conversion entry.
     // TODO: Handle Acyclic graphs? Someone will try to do that eventually. Probably me...
     // TODO: Test interactions with the GO system for prefabs.
 
@@ -36,20 +34,20 @@ namespace Hydrogen.Entities
     {
         private unsafe struct BlobData
         {
-            [NativeDisableUnsafePtrRestriction] private byte* _blobRef;
-            private int _blobTypeHashCode;
+            [NativeDisableUnsafePtrRestriction] private byte* m_blobRef;
+            private int m_identifier;
 
-            public bool IsValid => _blobRef != null;
+            public bool IsValid => m_blobRef != null;
 
-            public int BlobTypeHashCode => _blobTypeHashCode;
+            public int Identifier => m_identifier;
 
-            public static BlobData Create<T0>(BlobAssetReference<T0> reference)
+            public static BlobData Create<T0>(BlobAssetReference<T0> reference, int identifier)
                 where T0 : struct
             {
                 BlobData blobData = default;
 
-                UnsafeUtility.CopyStructureToPtr(ref reference, &blobData._blobRef);
-                blobData._blobTypeHashCode = typeof(T0).GetHashCode();
+                UnsafeUtility.CopyStructureToPtr(ref reference, &blobData.m_blobRef);
+                blobData.m_identifier = identifier;
 
                 return blobData;
             }
@@ -57,10 +55,9 @@ namespace Hydrogen.Entities
             public BlobAssetReference<T0> AsReference<T0>()
                 where T0 : struct
             {
-                Assert.AreEqual(_blobTypeHashCode, typeof(T0).GetHashCode());
-                Assert.IsTrue(_blobRef != null);
+                Assert.IsTrue(m_blobRef != null);
 
-                fixed (void* data = &_blobRef)
+                fixed (void* data = &m_blobRef)
                 {
                     UnsafeUtility.CopyPtrToStructure(data, out BlobAssetReference<T0> reference);
 
@@ -69,55 +66,66 @@ namespace Hydrogen.Entities
             }
         }
 
-        private NativeHashMap<int, BlobData> _scriptableToBlob;
+        private NativeHashMap<int, BlobData> m_scriptableToBlob;
 
-        private GameObjectConversionSystem _goConversionSystem;
+        private GameObjectConversionSystem m_goConversionSystem;
 
-        public GameObjectConversionSystem GoConversionSystem => _goConversionSystem;
-
-        protected override void OnCreate()
+        public GameObjectConversionSystem GoConversionSystem
         {
-            _goConversionSystem = World.GetExistingSystem<GameObjectConversionSystem>();
-            _scriptableToBlob = new NativeHashMap<int, BlobData>(100 * 1000, Allocator.Persistent);
+            get
+            {
+                if (m_goConversionSystem != null)
+                    return m_goConversionSystem;
+                
+                m_goConversionSystem = World.GetExistingSystem<GameObjectConversionSystem>();
+                Assert.IsNotNull(
+                    m_goConversionSystem,
+                    "Null GO Conversion system, did you mean to Get this System from the GameObject conversion world instead of the Destination World?");
+
+                return m_goConversionSystem;
+            }
         }
+
+        protected override void OnCreate() =>
+            m_scriptableToBlob = new NativeHashMap<int, BlobData>(100 * 1000, Allocator.Persistent);
 
         protected override void OnDestroy()
         {
-            _scriptableToBlob.Dispose();
+            m_scriptableToBlob.Dispose();
         }
 
 #if DETAIL_MARKERS
-        private ProfilerMarker _createBlob = new ProfilerMarker("ScriptableObjectConversion.CreateBlob");
+        private ProfilerMarker m_createBlob = new ProfilerMarker("ScriptableObjectConversion.CreateBlob");
 
-        private ProfilerMarker _createBlobWithFunc =
+        private ProfilerMarker m_createBlobWithFunc =
             new ProfilerMarker("ScriptableObjectConversion.CreateBlobWithFunc");
 #endif
 
 
-        private BlobData ConvertBlob<T0>(IConvertScriptableObjectToBlob<T0> src)
+        private BlobData ConvertBlob<T0>(IConvertScriptableObjectToBlob<T0> src, int identifier)
             where T0 : struct
         {
 #if DETAIL_MARKERS
-            using (_createBlob.Auto())
+            using (m_createBlob.Auto())
 #endif
             {
                 BlobAssetReference<T0> assetReference = src.Convert(this);
 
-                return BlobData.Create(assetReference);
+                return BlobData.Create(assetReference, identifier);
             }
         }
 
-        private BlobData ConvertBlob<T0, T1>(T0 obj, ScriptToBlobFunc<T0, T1> func)
+        private BlobData ConvertBlob<T0, T1>(T0 obj, ScriptToBlobFunc<T0, T1> func, int identifier)
             where T0 : ScriptableObject
             where T1 : struct
         {
 #if DETAIL_MARKERS
-            using (_createBlobWithFunc.Auto())
+            using (m_createBlobWithFunc.Auto())
 #endif
             {
                 BlobAssetReference<T1> assetReference = func.Invoke(obj, this);
 
-                return BlobData.Create(assetReference);
+                return BlobData.Create(assetReference, identifier);
             }
         }
 
@@ -135,12 +143,15 @@ namespace Hydrogen.Entities
             where T0 : ScriptableObject, IConvertScriptableObjectToBlob<T1>
             where T1 : struct
         {
-            if (PreCheck(obj, out int instanceId, out BlobAssetReference<T1> blob))
+            int identifier = new Vector3Int(obj.GetInstanceID(), typeof(T0).GetHashCode(), typeof(T1).GetHashCode())
+               .GetHashCode();
+            
+            if (PreCheck(obj, identifier, out BlobAssetReference<T1> blob))
                 return blob;
+            
+            BlobData data = ConvertBlob(obj, identifier);
 
-            BlobData data = ConvertBlob(obj);
-
-            return PostCheck<T1>(instanceId, data);
+            return PostCheck<T1>(identifier, data);
         }
 
         /// <summary>
@@ -158,18 +169,20 @@ namespace Hydrogen.Entities
             where T0 : ScriptableObject
             where T1 : struct
         {
-            if (PreCheck(obj, out int instanceId, out BlobAssetReference<T1> blob))
+            int identifier = new Vector2Int(obj.GetInstanceID(), func.GetHashCode()).GetHashCode();
+            
+            if (PreCheck(obj, identifier, out BlobAssetReference<T1> blob))
                 return blob;
+            
+            BlobData data = ConvertBlob(obj, func, identifier);
 
-            BlobData data = ConvertBlob(obj, func);
-
-            return PostCheck<T1>(instanceId, data);
+            return PostCheck<T1>(identifier, data);
         }
 
         private BlobAssetReference<T0> PostCheck<T0>(int instanceId, BlobData data)
             where T0 : struct
         {
-            if (_scriptableToBlob.TryAdd(instanceId, data))
+            if (m_scriptableToBlob.TryAdd(instanceId, data))
                 return data.AsReference<T0>();
 
             data.AsReference<T0>().Release();
@@ -177,7 +190,7 @@ namespace Hydrogen.Entities
             throw new InvalidOperationException();
         }
 
-        private bool PreCheck<T0, T1>(T0 obj, out int instanceId, out BlobAssetReference<T1> blobAssetReference)
+        private bool PreCheck<T0, T1>(T0 obj, int identifier, out BlobAssetReference<T1> blobAssetReference)
             where T0 : ScriptableObject
             where T1 : struct
         {
@@ -186,9 +199,7 @@ namespace Hydrogen.Entities
             if (obj == null)
                 throw new NullReferenceException();
 
-            instanceId = obj.GetInstanceID();
-
-            if (!_scriptableToBlob.TryGetValue(instanceId, out BlobData data))
+            if (!m_scriptableToBlob.TryGetValue(identifier, out BlobData data))
                 return false;
 
             blobAssetReference = data.AsReference<T1>();
@@ -208,8 +219,8 @@ namespace Hydrogen.Entities
             where T1 : struct
         {
             return obj != null
-                && _scriptableToBlob.TryGetValue(obj.GetInstanceID(), out BlobData data)
-                && data.BlobTypeHashCode == typeof(T1).GetHashCode();
+                && m_scriptableToBlob.TryGetValue(obj.GetInstanceID(), out BlobData data)
+                && data.Identifier == typeof(T1).GetHashCode();
         }
     }
     

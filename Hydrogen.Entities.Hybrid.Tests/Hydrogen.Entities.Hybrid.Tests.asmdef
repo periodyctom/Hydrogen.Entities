@@ -1,0 +1,26 @@
+{
+    "name": "Hydrogen.Entities.Hybrid.Tests",
+    "references": [
+        "GUID:734d92eba21c94caba915361bd5ac177",
+        "GUID:8e2f79f713f5a47dcb69903037d4bc0e",
+        "GUID:8819f35a0fc84499b990e90a4ca1911f",
+        "GUID:bd9484a338da1458bb1d27afe56e6f90",
+        "GUID:27619889b8ba8c24980f49ee34dbb44a",
+        "GUID:0acc523941302664db1f4e527237feb3",
+        "GUID:7e90c1c4e0c0d2d42be96bd86a25e3ac",
+        "GUID:44ab9bb22c816394bb1625d8e2ca2fd6"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": true,
+    "precompiledReferences": [
+        "nunit.framework.dll"
+    ],
+    "autoReferenced": false,
+    "defineConstraints": [
+        "UNITY_INCLUDE_TESTS"
+    ],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

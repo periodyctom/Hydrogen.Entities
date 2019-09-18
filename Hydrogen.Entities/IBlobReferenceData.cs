@@ -13,7 +13,7 @@ namespace Hydrogen.Entities
         /// <summary>
         /// The <see cref="BlobAssetReference{T}"/>
         /// </summary>
-        BlobAssetReference<T> Reference { get; }
+        BlobAssetReference<T> Reference { get; set; }
 
         /// <summary>
         /// Convenience accessor for resolving the blob reference directly.

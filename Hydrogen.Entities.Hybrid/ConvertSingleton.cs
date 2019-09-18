@@ -13,6 +13,7 @@ namespace Hydrogen.Entities
     /// <typeparam name="T1"><see cref="IComponentData"/> data type</typeparam>
     [DisallowMultipleComponent]
     [RequiresEntityConversion]
+    [Obsolete]
     public abstract class ConvertSingleton<T0, T1> : MonoBehaviour, IConvertGameObjectToEntity
         where T0 : ScriptableObject
         where T1 : struct, IComponentData
