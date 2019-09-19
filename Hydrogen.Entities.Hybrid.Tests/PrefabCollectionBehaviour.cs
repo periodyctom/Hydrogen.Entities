@@ -7,6 +7,7 @@ namespace Hydrogen.Entities.Tests
 {
     [RequiresEntityConversion]
     [DisallowMultipleComponent]
+    [AddComponentMenu("Hidden/DontUse")]
     public class PrefabCollectionBehaviour : MonoBehaviour, IDeclareReferencedPrefabs, IConvertGameObjectToEntity
     {
         public PrefabCollection Collection;

@@ -274,7 +274,7 @@ namespace Hydrogen.Entities.Tests
                 ref Entity e = ref blob.Prefabs[j];
                 Assert.IsTrue(m_Manager.Exists(e));
                 Assert.IsTrue(m_Manager.GetComponentCount(e) > 1);
-                Assert.IsTrue(!assertNoPrefabCollection || m_Manager.HasComponent<PrefabCollectionReference>(e));
+                Assert.IsTrue(!assertNoPrefabCollection || !m_Manager.HasComponent<PrefabCollectionReference>(e));
             }
         }
 

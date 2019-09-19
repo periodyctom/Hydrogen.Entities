@@ -1,12 +1,13 @@
 using System.Collections.Generic;
 using Unity.Collections;
 using Unity.Entities;
-using UnityEditor;
 using UnityEngine;
+// ReSharper disable CheckNamespace
 
 namespace Hydrogen.Entities.Tests
 {
-    [CreateAssetMenu(menuName = "Hydrogen/Entities/Tests")]
+    [CreateAssetMenu(menuName = "Hidden/DontUse")]
+    
     public class PrefabCollection : ScriptableObject, IConvertScriptableObjectToBlob<PrefabCollectionBlob>, 
                                     IDeclareReferencedPrefabs
     {
