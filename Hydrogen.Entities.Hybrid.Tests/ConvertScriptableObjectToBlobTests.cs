@@ -13,12 +13,6 @@ namespace Hydrogen.Entities.Tests
     [SuppressMessage("ReSharper", "CompareOfFloatsByEqualityOperator")]
     public class ConvertScriptableObjectToBlobTests : ECSTestsFixture
     {
-        private static GameObject LoadPrefab(string name)
-        {
-            return AssetDatabase.LoadAssetAtPath<GameObject>(
-                $"Packages/com.periodyc.hydrogen.entities/Hydrogen.Entities.Hybrid.Tests/{name}.prefab");
-        }
-        
         private const float kMeaningOfLifeFloat = 42.0f;
         private const uint kMeaningOfLifeUInt = 42u;
         private const string kFooText = "Lorem Ipsum";
@@ -260,7 +254,7 @@ namespace Hydrogen.Entities.Tests
 
         private void AssertPrefabCollection(Entity entity, bool assertNoPrefabCollection = false)
         {
-            var collectionReference = m_Manager.GetComponentData<PrefabCollectionReference>(entity);
+            var collectionReference = m_Manager.GetComponentData<BlobRefData<PrefabCollectionBlob>>(entity);
 
             Assert.IsTrue(collectionReference.IsCreated);
 
@@ -274,7 +268,7 @@ namespace Hydrogen.Entities.Tests
                 ref Entity e = ref blob.Prefabs[j];
                 Assert.IsTrue(m_Manager.Exists(e));
                 Assert.IsTrue(m_Manager.GetComponentCount(e) > 1);
-                Assert.IsTrue(!assertNoPrefabCollection || !m_Manager.HasComponent<PrefabCollectionReference>(e));
+                Assert.IsTrue(!assertNoPrefabCollection || !m_Manager.HasComponent<BlobRefData<PrefabCollectionBlob>>(e));
             }
         }
 
@@ -473,7 +467,7 @@ namespace Hydrogen.Entities.Tests
         [Test]
         public void ConvertScriptableObjectToBlob_WithPrefabReferences()
         {
-            GameObject prefab = LoadPrefab("LeafPrefabCollection_00");
+            GameObject prefab = TestUtilities.LoadPrefab("LeafPrefabCollection_00");
             
             Assert.IsNotNull(prefab);
 
@@ -491,7 +485,7 @@ namespace Hydrogen.Entities.Tests
             
             GameObjectConversionUtility.ConvertGameObjectHierarchy(instance.gameObject, World);
 
-            EntityQuery query = m_Manager.CreateEntityQuery(ComponentType.ReadOnly<PrefabCollectionReference>());
+            EntityQuery query = m_Manager.CreateEntityQuery(ComponentType.ReadOnly<BlobRefData<PrefabCollectionBlob>>());
             
             try
             {
@@ -506,7 +500,7 @@ namespace Hydrogen.Entities.Tests
         [Test]
         public void ConvertScriptableObjectToBlob_WithPrefabsThatAlsoReferenceBlobs()
         {
-            GameObject prefab = LoadPrefab("RootPrefabCollection");
+            GameObject prefab = TestUtilities.LoadPrefab("RootPrefabCollection");
             
             Assert.IsNotNull(prefab);
 
@@ -524,7 +518,7 @@ namespace Hydrogen.Entities.Tests
             
             GameObjectConversionUtility.ConvertGameObjectHierarchy(instance.gameObject, World);
 
-            ComponentType prefabRefTypeRO = ComponentType.ReadOnly<PrefabCollectionReference>();
+            ComponentType prefabRefTypeRO = ComponentType.ReadOnly<BlobRefData<PrefabCollectionBlob>>();
             
             EntityQuery liveQuery = m_Manager.CreateEntityQuery(prefabRefTypeRO);
             EntityQuery prefabQuery = m_Manager.CreateEntityQuery(prefabRefTypeRO, ComponentType.ReadOnly<Prefab>());

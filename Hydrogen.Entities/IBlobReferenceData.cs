@@ -1,3 +1,4 @@
+using System.Runtime.CompilerServices;
 using Unity.Entities;
 
 namespace Hydrogen.Entities
@@ -7,22 +8,49 @@ namespace Hydrogen.Entities
     /// Adds some convenience accessors and is used by the Singleton Conversion process.
     /// </summary>
     /// <typeparam name="T">Blob struct Type</typeparam>
-    public interface IBlobReferenceData<T> : IComponentData
+    // public interface IBlobReferenceData<T> : IComponentData
+    //     where T : struct
+    // {
+    //     /// <summary>
+    //     /// The <see cref="BlobAssetReference{T}"/>
+    //     /// </summary>
+    //     BlobAssetReference<T> Reference { get; set; }
+    //
+    //     /// <summary>
+    //     /// Convenience accessor for resolving the blob reference directly.
+    //     /// </summary>
+    //     ref T Resolve { get; }
+    //
+    //     /// <summary>
+    //     /// Has the reference been properly created?
+    //     /// </summary>
+    //     bool IsCreated { get; }
+    // }
+
+    public struct BlobRefData<T> : IComponentData
         where T : struct
     {
-        /// <summary>
-        /// The <see cref="BlobAssetReference{T}"/>
-        /// </summary>
-        BlobAssetReference<T> Reference { get; set; }
+        public BlobAssetReference<T> Value;
 
-        /// <summary>
-        /// Convenience accessor for resolving the blob reference directly.
-        /// </summary>
-        ref T Resolve { get; }
+        public BlobAssetReference<T> Reference
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get => Value;
+            
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            set => Value = value;
+        }
+        
+        public ref T Resolve
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get => ref Value.Value;
+        }
 
-        /// <summary>
-        /// Has the reference been properly created?
-        /// </summary>
-        bool IsCreated { get; }
+        public bool IsCreated
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get => Value.IsCreated;
+        }
     }
 }

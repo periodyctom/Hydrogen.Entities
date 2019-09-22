@@ -4,7 +4,7 @@ using Unity.Entities;
 
 namespace Hydrogen.Entities
 {
-    [Obsolete("Use the new conversion systems framework and SingletonHelper<T> instead as it caches the query and has less redundancy. \nSee the tests for more details.")]
+    [Obsolete("Use the new SingletonConverter types and Systems. \nSee the tests for more details.")]
     public static class Singletons
     {
         /// <summary>

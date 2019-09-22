@@ -8,25 +8,42 @@ namespace Hydrogen.Entities
         where T : struct
     {
         T Singleton { get; }
+        bool DontReplaceIfLoaded { get; }
     }
     
     [Serializable]
-    public struct SingletonBlobConverter<T0, T1> : ISingletonConverter<T0>
-        where T0 : struct, IBlobReferenceData<T1>
-        where T1 : struct
+    public struct SingletonBlobConverter<T> : ISingletonConverter<BlobRefData<T>>
+        where T : struct
     {
-        public T0 Value;
+        public BlobRefData<T> Value;
+        
+        public bool DontReplace;
+        
+        public bool DontReplaceIfLoaded
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get => DontReplace;
+        }
 
-        public T0 Singleton
+        public BlobRefData<T> Singleton
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get => Value;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public SingletonBlobConverter(T0 value) => Value = value;
+        public SingletonBlobConverter(BlobRefData<T> value, bool dontReplace)
+        {
+            Value = value;
+            DontReplace = dontReplace;
+        }
 
-        public static explicit operator T0(SingletonBlobConverter<T0, T1> @this) => @this.Value;
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static implicit operator BlobRefData<T>(SingletonBlobConverter<T> @this) => @this.Value;
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static implicit operator SingletonBlobConverter<T>(BlobRefData<T> value) =>
+            new SingletonBlobConverter<T>(value, false);
     }
 
     [Serializable]
@@ -34,6 +51,14 @@ namespace Hydrogen.Entities
         where T : struct, IComponentData
     {
         public T Value;
+        
+        public bool DontReplace;
+
+        public bool DontReplaceIfLoaded
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get => DontReplace;
+        }
 
         public T Singleton
         {
@@ -42,15 +67,19 @@ namespace Hydrogen.Entities
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public SingletonDataConverter(T value) => Value = value;
+        public SingletonDataConverter(T value, bool dontReplace)
+        {
+            Value = value;
+            DontReplace = dontReplace;
+        }
 
-        public static explicit operator T(SingletonDataConverter<T> @this) => @this.Value;
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static implicit operator T(SingletonDataConverter<T> @this) => @this.Value;
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static implicit operator SingletonDataConverter<T>(T value) =>
+            new SingletonDataConverter<T>(value, false);
     }
-
-    public struct SingletonRefresh<T> : IComponentData
-        where T : struct, IComponentData { }
-
-    public struct SingletonDontReplace : IComponentData { }
-
-    public struct SingletonRequiresRefresh : IComponentData { }
+    
+    public struct SingletonConverted : IComponentData { }
 }

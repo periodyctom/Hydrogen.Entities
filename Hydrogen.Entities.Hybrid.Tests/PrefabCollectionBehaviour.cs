@@ -27,12 +27,12 @@ namespace Hydrogen.Entities.Tests
             BlobAssetReference<PrefabCollectionBlob> prefabs =
                 scriptConversion.GetBlob<PrefabCollection, PrefabCollectionBlob>(Collection);
 
-            PrefabCollectionReference reference = default;
-            reference.Value = prefabs;
+            BlobRefData<PrefabCollectionBlob> @ref = default;
+            @ref.Value = prefabs;
             
-            dstManager.AddComponentData(entity, reference);
-            
-            Assert.IsTrue(dstManager.HasComponent<PrefabCollectionReference>(entity));
+            dstManager.AddComponentData(entity, @ref);
+
+            Assert.IsTrue(dstManager.HasComponent<BlobRefData<PrefabCollectionBlob>>(entity));
         }
     }
 }
