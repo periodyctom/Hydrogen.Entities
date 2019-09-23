@@ -6,15 +6,14 @@ using UnityEngine.Assertions;
 namespace Hydrogen.Entities
 {
     [UpdateInGroup(typeof(InitializationSystemGroup))]
-    public class SingletonConvertSystem<T0, T1> : ComponentSystem
-        where T0 : struct, ISingletonConverter<T1>
+    public class SingletonConvertSystem<T1> : ComponentSystem
         where T1 : struct, IComponentData
     {
         private EntityQuery m_preConvertedQuery;
         private EntityQuery m_postConvertedQuery;
         private EntityQuery m_singletonQuery;
 
-        private readonly EntityQueryBuilder.F_D<T0> m_process;
+        private readonly EntityQueryBuilder.F_D<SingletonConverter<T1>> m_process;
 
         private NativeList<(T1, bool)> m_candidates;
         private EntityArchetype m_singletonArchetype;
@@ -30,7 +29,7 @@ namespace Hydrogen.Entities
 
             // ReSharper disable InconsistentNaming
             ComponentType singletonTypeRW = ComponentType.ReadWrite<T1>();
-            ComponentType singletonTypeRO = ComponentType.ReadOnly<T0>();
+            ComponentType singletonTypeRO = ComponentType.ReadOnly<SingletonConverter<T1>>();
 
             // ReSharper restore InconsistentNaming
 
@@ -130,14 +129,7 @@ namespace Hydrogen.Entities
             }
         }
 
-        private void Process([ReadOnly] ref T0 converter) =>
-            m_candidates.Add((converter.Singleton, converter.DontReplaceIfLoaded));
+        private void Process([ReadOnly] ref SingletonConverter<T1> converter) =>
+            m_candidates.Add((converter.Value, converter.DontReplace));
     }
-
-    public class SingletonDataConvertSystem<T> : SingletonConvertSystem<SingletonDataConverter<T>, T>
-        where T : struct, IComponentData { }
-
-    public class SingletonBlobConvertSystem<T> : SingletonConvertSystem<SingletonBlobConverter<T>,
-        BlobRefData<T>>
-        where T : struct { }
 }

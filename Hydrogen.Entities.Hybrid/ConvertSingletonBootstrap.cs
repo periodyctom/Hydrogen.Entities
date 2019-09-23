@@ -11,8 +11,7 @@ namespace Hydrogen.Entities
     /// <typeparam name="T1">Singleton Component Data type</typeparam>
     [DisallowMultipleComponent]
     [RequiresEntityConversion]
-    public abstract class ConvertSingletonBootstrap<T0, T1> : MonoBehaviour, IConvertGameObjectToEntity
-        where T0 : struct, ISingletonConverter<T1>
+    public abstract class ConvertSingletonBootstrap<T1> : MonoBehaviour, IConvertGameObjectToEntity
         where T1 : struct, IComponentData
     {
         /// <summary>
@@ -30,7 +29,7 @@ namespace Hydrogen.Entities
         /// <param name="dstManager">Destination <see cref="EntityManager"/></param>
         /// <param name="conversionSystem">The <see cref="GameObjectConversionSystem"/> for converting any other GameObject parts.</param>
         /// <returns>The Singleton Converter type.</returns>
-        protected abstract T0 GetConverter(
+        protected abstract SingletonConverter<T1> GetConverter(
             Entity entity,
             EntityManager dstManager,
             GameObjectConversionSystem conversionSystem);
@@ -51,37 +50,53 @@ namespace Hydrogen.Entities
     /// Base class for implementing singleton conversions from regular <see cref="IComponentData"/> structs.
     /// </summary>
     /// <typeparam name="T">The data struct IComponentData type.</typeparam>
-    public abstract class ConvertSingletonDataBootstrap<T> : ConvertSingletonBootstrap<SingletonDataConverter<T>, T>
+    public abstract class ConvertSingletonDataBootstrap<T> : ConvertSingletonBootstrap<T>
         where T : struct, IComponentData
     {
     }
-
-    /// <summary>
-    /// Base Class for implementing singleton conversions from <see cref="BlobAssetReference{T1}"/>.
-    /// </summary>
-    /// <typeparam name="T">The Blob asset struct type.</typeparam>
-    public abstract class ConvertSingletonBlobBootstrap<T> : 
-    ConvertSingletonBootstrap<SingletonBlobConverter<T>, BlobRefData<T>>
-        where T : struct
-    {
-    }
-
+    
     /// <summary>
     /// Base Class for implementing simple conversions of serializable struct singletons.
     /// </summary>
     /// <typeparam name="T">Component Data that is also serializable in the editor.</typeparam>
-    public abstract class ConvertSingletonDataSimpleBootstrap<T> : ConvertSingletonDataBootstrap<T>
+    public class ConvertSingletonDataSimpleBootstrap<T> : ConvertSingletonDataBootstrap<T>
         where T : struct, IComponentData
     {
         [SerializeField]
         [Tooltip("Source setting for our singleton.")]
         private T m_data;
 
-        protected override SingletonDataConverter<T> GetConverter(
+        protected override SingletonConverter<T> GetConverter(
             Entity entity,
             EntityManager dstManager,
             GameObjectConversionSystem conversionSystem) =>
-            new SingletonDataConverter<T>(m_data, DontReplaceIfLoaded);
+            new SingletonConverter<T>(m_data, DontReplaceIfLoaded);
+    }
+
+    public abstract class ConvertSingletonBlobBootstrap<T0, T1> : ConvertSingletonBootstrap<BlobRefData<T0>>
+        where T0 : struct
+        where T1 : ScriptableObject
+    {
+        [SerializeField]
+        [Tooltip("Source ScriptableObject setting for our singleton.")]
+        protected T1 m_data;
+        
+        protected abstract BlobAssetReference<T0> Convert(ScriptableObjectConversionSystem conversionSystem, T1 src);
+        
+        protected sealed override SingletonConverter<BlobRefData<T0>> GetConverter(
+            Entity entity,
+            EntityManager dstManager,
+            GameObjectConversionSystem conversionSystem)
+        {
+            BlobAssetReference<T0> blob = Convert(
+                dstManager.World.GetOrCreateSystem<ScriptableObjectConversionSystem>(),
+                m_data);
+
+            BlobRefData<T0> blobReferenceData = default;
+            blobReferenceData.Reference = blob;
+
+            return new SingletonConverter<BlobRefData<T0>>(blobReferenceData, DontReplaceIfLoaded);
+        }
     }
 
     /// <summary>
@@ -90,27 +105,12 @@ namespace Hydrogen.Entities
     /// </summary>
     /// <typeparam name="T0">The Blob asset struct type.</typeparam>
     /// <typeparam name="T1">ScriptableObject that implements the conversion interface.</typeparam>
-    public abstract class ConvertSingletonBlobInterfaceBootstrap<T0, T1> : ConvertSingletonBlobBootstrap<T0>
+    public class ConvertSingletonBlobInterfaceBootstrap<T0, T1> : ConvertSingletonBlobBootstrap<T0, T1>
         where T0 : struct
         where T1 : ScriptableObject, IConvertScriptableObjectToBlob<T0>
     {
-        [SerializeField]
-        [Tooltip("Source ScriptableObject setting for our singleton.")]
-        private T1 m_data;
-
-        protected override SingletonBlobConverter<T0> GetConverter(
-            Entity entity,
-            EntityManager dstManager,
-            GameObjectConversionSystem conversionSystem)
-        {
-            var soConversionSystem = dstManager.World.GetOrCreateSystem<ScriptableObjectConversionSystem>();
-            BlobAssetReference<T0> blob = soConversionSystem.GetBlob<T1, T0>(m_data);
-
-            BlobRefData<T0> blobReferenceData = default;
-            blobReferenceData.Reference = blob;
-
-            return new SingletonBlobConverter<T0>(blobReferenceData, DontReplaceIfLoaded);
-        }
+        protected override BlobAssetReference<T0> Convert(ScriptableObjectConversionSystem conversionSystem, T1 src) =>
+            conversionSystem.GetBlob<T1, T0>(m_data);
     }
 
     /// <summary>
@@ -119,32 +119,13 @@ namespace Hydrogen.Entities
     /// </summary>
     /// <typeparam name="T0">The Blob asset struct type.</typeparam>
     /// <typeparam name="T1">ScriptableObject that will be converted by the custom function.</typeparam>
-    public abstract class ConvertSingletonBlobCustomBootstrap<T0, T1> : ConvertSingletonBlobBootstrap<T0>
+    public abstract class ConvertSingletonBlobCustomBootstrap<T0, T1> : ConvertSingletonBlobBootstrap<T0, T1>
         where T0 : struct
         where T1 : ScriptableObject
     {
-        [SerializeField]
-        [Tooltip("Source ScriptableObject setting for our singleton.")]
-        private T1 m_data;
-        
-        /// <summary>
-        /// The <see cref="ScriptToBlobFunc{T2, T1}"/> accessor.
-        /// It's setup like this to allow for the user to cache the conversion function.
-        /// </summary>
-        protected abstract ScriptToBlobFunc<T1, T0> Conversion { get; }
+        protected abstract ScriptToBlobFunc<T1, T0> ScriptToBlob { get; }
 
-        protected override SingletonBlobConverter<T0> GetConverter(
-            Entity entity,
-            EntityManager dstManager,
-            GameObjectConversionSystem conversionSystem)
-        {
-            var soConversionSystem = dstManager.World.GetOrCreateSystem<ScriptableObjectConversionSystem>();
-            BlobAssetReference<T0> blob = soConversionSystem.GetBlob(m_data, Conversion);
-            
-            BlobRefData<T0> blobReferenceData = default;
-            blobReferenceData.Reference = blob;
-
-            return new SingletonBlobConverter<T0>(blobReferenceData, DontReplaceIfLoaded);
-        }
+        protected override BlobAssetReference<T0> Convert(ScriptableObjectConversionSystem conversionSystem, T1 src) =>
+            conversionSystem.GetBlob(m_data, ScriptToBlob);
     }
 }

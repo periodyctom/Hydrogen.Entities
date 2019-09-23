@@ -6,15 +6,29 @@ using Unity.Entities;
 using Unity.Entities.Tests;
 using UnityEngine;
 
+
+
 // ReSharper disable CheckNamespace
 
 namespace Hydrogen.Entities.Tests
 {
     public class SingletonTests : ECSTestsFixture
     {
-        private class TestTimeConfigConvertSystem : SingletonDataConvertSystem<TestTimeConfig> { }
+        internal struct TestSupportedLocales
+        {
+            public BlobString Default;
+            public BlobArray<NativeString64> Available;
+        }
 
-        private class TestSupportedLocalesConvertSystem : SingletonBlobConvertSystem<TestSupportedLocales> { }
+        internal struct TestTimeConfig : IComponentData
+        {
+            public uint AppTargetFrameRate;
+            public float FixedDeltaTime;
+        }
+        
+        private class TestTimeConfigConvertSystem : SingletonConvertSystem<TestTimeConfig> { }
+
+        private class TestSupportedLocalesConvertSystem : SingletonConvertSystem<BlobRefData<TestSupportedLocales>> { }
 
         [UpdateInGroup(typeof(InitializationSystemGroup))]
         [UpdateAfter(typeof(TestTimeConfigConvertSystem))]
@@ -24,7 +38,7 @@ namespace Hydrogen.Entities.Tests
             {
                 RequireForUpdate(
                     GetEntityQuery(
-                        ComponentType.ReadOnly<SingletonDataConverter<TestTimeConfig>>(),
+                        ComponentType.ReadOnly<SingletonConverter<TestTimeConfig>>(),
                         ComponentType.ReadOnly<SingletonConverted>()));
 
                 RequireSingletonForUpdate<TestTimeConfig>();
@@ -46,14 +60,14 @@ namespace Hydrogen.Entities.Tests
         private class TestSupportedLocalesRefreshSystem : ComponentSystem
         {
             private readonly StringBuilder localeListBuilder = new StringBuilder(1024);
-            
+
             protected override void OnCreate()
             {
                 RequireForUpdate(
                     GetEntityQuery(
-                        ComponentType.ReadOnly<SingletonBlobConverter<TestSupportedLocales>>(),
+                        ComponentType.ReadOnly<SingletonConverter<BlobRefData<TestSupportedLocales>>>(),
                         ComponentType.ReadOnly<SingletonConverted>()));
-                
+
                 RequireSingletonForUpdate<BlobRefData<TestSupportedLocales>>();
             }
 
@@ -61,16 +75,16 @@ namespace Hydrogen.Entities.Tests
             {
                 ref TestSupportedLocales supportedLocales =
                     ref GetSingleton<BlobRefData<TestSupportedLocales>>().Resolve;
-                
+
                 Debug.LogFormat("Current default locale is: {0}", supportedLocales.Default.ToString());
 
-
                 int availableCount = supportedLocales.Available.Length;
+
                 if (availableCount <= 1)
                     return;
 
                 localeListBuilder.AppendLine("Available Locales:");
-                    
+
                 for (int i = 0; i < availableCount; i++)
                 {
                     localeListBuilder.AppendLine($"  {supportedLocales.Available[i].ToString()}");
@@ -96,11 +110,10 @@ namespace Hydrogen.Entities.Tests
                 Singleton = singleton;
             }
 
-            private static SingletonQueries CreateQueries<T0, T1>(EntityManager manager)
-                where T0 : struct, ISingletonConverter<T1>
+            public static SingletonQueries CreateQueries<T1>(EntityManager manager)
                 where T1 : struct
             {
-                ComponentType converterTypeRO = ComponentType.ReadOnly<T0>();
+                ComponentType converterTypeRO = ComponentType.ReadOnly<SingletonConverter<T1>>();
 
                 EntityQuery preConverted = manager.CreateEntityQuery(
                     converterTypeRO,
@@ -115,16 +128,6 @@ namespace Hydrogen.Entities.Tests
                 return new SingletonQueries(preConverted, postConverted, singleton);
             }
 
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public static SingletonQueries CreateDataQuery<T0>(EntityManager manager)
-                where T0 : struct, IComponentData =>
-                CreateQueries<SingletonDataConverter<T0>, T0>(manager);
-
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public static SingletonQueries CreateBlobQueries<T0>(EntityManager manager)
-                where T0 : struct =>
-                CreateQueries<SingletonBlobConverter<T0>, BlobRefData<T0>>(manager);
-
             public void Dispose()
             {
                 PreConverted.Dispose();
@@ -133,7 +136,7 @@ namespace Hydrogen.Entities.Tests
             }
         }
 
-        private SingletonQueries m_testFrameRateConfigs;
+        private SingletonQueries m_testTimeConfigs;
         private SingletonQueries m_testSupportedLocales;
 
         // TODO: Data Converter produces correct Singleton
@@ -144,11 +147,11 @@ namespace Hydrogen.Entities.Tests
         {
             base.Setup();
 
-            m_testFrameRateConfigs = SingletonQueries.CreateDataQuery<TestTimeConfig>(m_Manager);
-            m_testSupportedLocales = SingletonQueries.CreateBlobQueries<TestSupportedLocales>(m_Manager);
+            m_testTimeConfigs = SingletonQueries.CreateQueries<TestTimeConfig>(m_Manager);
+            m_testSupportedLocales = SingletonQueries.CreateQueries<BlobRefData<TestSupportedLocales>>(m_Manager);
 
             World world = m_Manager.World;
-            
+
             var initGroup = world.GetOrCreateSystem<InitializationSystemGroup>();
             initGroup.AddSystemToUpdateList(world.CreateSystem<TestTimeConfigConvertSystem>());
             initGroup.AddSystemToUpdateList(world.CreateSystem<TestSupportedLocalesConvertSystem>());
@@ -160,7 +163,7 @@ namespace Hydrogen.Entities.Tests
         [TearDown]
         public override void TearDown()
         {
-            m_testFrameRateConfigs.Dispose();
+            m_testTimeConfigs.Dispose();
             m_testSupportedLocales.Dispose();
 
             base.TearDown();
@@ -171,11 +174,38 @@ namespace Hydrogen.Entities.Tests
         [Test, Ignore("Not implemented")]
         public void DataConverter_SetsSingleton_WithOneConverter()
         {
-            SingletonDataConverter<TestTimeConfig> frameRateConfig = new TestTimeConfig
+            EntityArchetype testTimeConverter =
+                m_Manager.CreateArchetype(ComponentType.ReadWrite<SingletonConverter<TestTimeConfig>>());
+
+            EntityArchetype testTimeConverted = m_Manager.CreateArchetype(
+                ComponentType.ReadOnly<SingletonConverter<TestTimeConfig>>(),
+                ComponentType.ReadOnly<SingletonConverted>());
+            
+            // Check initial set
+            SingletonConverter<TestTimeConfig> timeConfig = new TestTimeConfig
             {
                 AppTargetFrameRate = 60,
                 FixedDeltaTime = 1 / 60.0f,
             };
+
+            Entity converterEntity = m_Manager.CreateEntity(testTimeConverter);
+            m_Manager.SetComponentData(converterEntity, timeConfig);
+
+            Assert.IsTrue(m_testTimeConfigs.PreConverted.CalculateEntityCount() == 1);
+            //
+            // World.Update();
+            //
+            //
+            //
+            // World.Update();
+
+            // Check Replace
+
+
+            // Check DontReplace Flag
+
+
+            // Check destroy
         }
 
         [Test, Ignore("Not implemented")]
