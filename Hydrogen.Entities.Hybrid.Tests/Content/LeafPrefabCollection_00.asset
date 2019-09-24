@@ -13,5 +13,5 @@ MonoBehaviour:
   m_Name: LeafPrefabCollection_00
   m_EditorClassIdentifier: 
   Prefabs:
-  - {fileID: 6657501364146617225, guid: 66aeb261b818a0b43912f3fb776e0924, type: 3}
-  - {fileID: 6657501364146617225, guid: 38c702372c5bab4488dbb611203160cb, type: 3}
+  - {fileID: 6657501364146617225, guid: de35e50e678eb9e47a696129236281bf, type: 3}
+  - {fileID: 6657501364146617225, guid: 97992c4e2fa102049a2cea753dca7026, type: 3}

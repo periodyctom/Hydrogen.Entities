@@ -5,31 +5,39 @@ using UnityEngine.Assertions;
 
 namespace Hydrogen.Entities
 {
+    /// <summary>
+    /// A generic system for handling the actual transformation from
+    /// <see cref="SingletonConverter{T}"/> to a Singleton of <typeparamref name="T"/>
+    /// </summary>
+    /// <typeparam name="T">Singleton Component Data type.</typeparam>
     [UpdateInGroup(typeof(InitializationSystemGroup))]
-    public class SingletonConvertSystem<T1> : ComponentSystem
-        where T1 : struct, IComponentData
+    public class SingletonConvertSystem<T> : ComponentSystem
+        where T : struct, IComponentData
     {
         private EntityQuery m_preConvertedQuery;
         private EntityQuery m_postConvertedQuery;
         private EntityQuery m_singletonQuery;
 
-        private readonly EntityQueryBuilder.F_D<SingletonConverter<T1>> m_process;
+        private readonly EntityQueryBuilder.F_D<SingletonConverter<T>> m_process;
 
-        private NativeList<(T1, bool)> m_candidates;
+        private NativeList<(T, bool)> m_candidates;
         private EntityArchetype m_singletonArchetype;
         private ComponentType m_convertedType;
 
         private bool m_hasPreviousValue;
 
-        public SingletonConvertSystem() => m_process = Process;
+        private static readonly string sm_typeName = typeof(T).Name;
 
+        public SingletonConvertSystem() => m_process = Process;
+        
         protected override void OnCreate()
         {
-            m_candidates = new NativeList<(T1, bool)>(4, Allocator.Persistent);
+            m_candidates = new NativeList<(T, bool)>(4, Allocator.Persistent);
 
             // ReSharper disable InconsistentNaming
-            ComponentType singletonTypeRW = ComponentType.ReadWrite<T1>();
-            ComponentType singletonTypeRO = ComponentType.ReadOnly<SingletonConverter<T1>>();
+            
+            ComponentType singletonTypeRW = ComponentType.ReadWrite<T>();
+            ComponentType singletonTypeRO = ComponentType.ReadOnly<SingletonConverter<T>>();
 
             // ReSharper restore InconsistentNaming
 
@@ -45,7 +53,7 @@ namespace Hydrogen.Entities
         {
             m_candidates.Dispose();
         }
-
+        
         protected override void OnUpdate()
         {
             int postConvertChunksLen = m_postConvertedQuery.CalculateChunkCountWithoutFiltering();
@@ -66,9 +74,9 @@ namespace Hydrogen.Entities
             int candidatesLength = m_candidates.Length;
             Assert.IsTrue(candidatesLength > 0);
 
-            if (candidatesLength < 1)
+            if (candidatesLength == 1)
             {
-                (T1 data, bool dontReplace) = m_candidates[0];
+                (T data, bool dontReplace) = m_candidates[0];
                 FinalizeCandidate(data, dontReplace);
             }
             else
@@ -76,15 +84,15 @@ namespace Hydrogen.Entities
                 Debug.LogWarningFormat(
                     "There are {0} singleton conversion candidates for {1}! Resolving in the order acquired!",
                     candidatesLength.ToString(),
-                    nameof(T1));
+                    sm_typeName);
 
                 if (!m_hasPreviousValue)
                 {
-                    (T1 data, bool dontReplace) = m_candidates[0];
+                    (T data, bool dontReplace) = m_candidates[0];
 
                     for (int i = 1; i < candidatesLength; i++)
                     {
-                        (T1 nextData, bool nextDontReplace) = m_candidates[i];
+                        (T nextData, bool nextDontReplace) = m_candidates[i];
 
                         if (nextDontReplace)
                             continue;
@@ -97,11 +105,11 @@ namespace Hydrogen.Entities
                 }
                 else
                 {
-                    (var data, bool dontReplace) = (m_singletonQuery.GetSingleton<T1>(), false);
+                    (var data, bool dontReplace) = (m_singletonQuery.GetSingleton<T>(), false);
 
                     for (int i = 0; i < candidatesLength; i++)
                     {
-                        (T1 nextData, bool nextDontReplace) = m_candidates[i];
+                        (T nextData, bool nextDontReplace) = m_candidates[i];
 
                         if (nextDontReplace)
                             continue;
@@ -116,7 +124,7 @@ namespace Hydrogen.Entities
             m_candidates.Clear();
         }
 
-        private void FinalizeCandidate(T1 data, bool dontReplace)
+        private void FinalizeCandidate(T data, bool dontReplace)
         {
             if (!m_hasPreviousValue)
             {
@@ -129,7 +137,7 @@ namespace Hydrogen.Entities
             }
         }
 
-        private void Process([ReadOnly] ref SingletonConverter<T1> converter) =>
+        private void Process([ReadOnly] ref SingletonConverter<T> converter) =>
             m_candidates.Add((converter.Value, converter.DontReplace));
     }
 }

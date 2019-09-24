@@ -13,5 +13,5 @@ MonoBehaviour:
   m_Name: RootPrefabCollection
   m_EditorClassIdentifier: 
   Prefabs:
-  - {fileID: 2609869190919442064, guid: 2ac5e525be6c830499607c9576bcab26, type: 3}
-  - {fileID: 2609869190919442064, guid: 3688318ab99e87b47b0541cff1c1f7d4, type: 3}
+  - {fileID: 2609869190919442064, guid: 3b9fe61a225fb274db5ad4d5d934df0c, type: 3}
+  - {fileID: 2609869190919442064, guid: e0ec4db89383e694d9e65abac9f9da1f, type: 3}

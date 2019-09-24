@@ -12,7 +12,7 @@ GameObject:
   - component: {fileID: 4318598872908693224}
   - component: {fileID: 3783428773086899104}
   m_Layer: 0
-  m_Name: TestPrefabCollection
+  m_Name: LeafPrefabCollection_00
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -44,7 +44,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2cd13458fad5a5e4680eb96e2056fae2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  Collection: {fileID: 11400000, guid: 5d65ce06b0cae8349807c5b81758ad66, type: 2}
+  Collection: {fileID: 11400000, guid: 90a5ea14f418a5d43bc4a40aa673cf06, type: 2}
 --- !u!114 &3783428773086899104
 MonoBehaviour:
   m_ObjectHideFlags: 0

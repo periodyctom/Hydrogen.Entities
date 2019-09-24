@@ -100,8 +100,7 @@ namespace Hydrogen.Entities
         private ProfilerMarker m_createBlobWithFunc =
             new ProfilerMarker("ScriptableObjectConversion.CreateBlobWithFunc");
 #endif
-
-
+        
         private BlobData ConvertBlob<T0>(IConvertScriptableObjectToBlob<T0> src, int identifier)
             where T0 : struct
         {
