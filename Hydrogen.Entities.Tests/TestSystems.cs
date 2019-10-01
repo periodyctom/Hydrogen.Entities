@@ -18,15 +18,15 @@ namespace Hydrogen.Entities.Tests
         {
             RequireForUpdate(
                 GetEntityQuery(
-                    ComponentType.ReadOnly<SingletonConverter<BlobRefData<TestSupportedLocales>>>(),
+                    ComponentType.ReadOnly<SingletonConverter<BlobRefData<Locales>>>(),
                     ComponentType.ReadOnly<SingletonConverted>()));
 
-            RequireSingletonForUpdate<BlobRefData<TestSupportedLocales>>();
+            RequireSingletonForUpdate<BlobRefData<Locales>>();
         }
 
         protected override void OnUpdate()
         {
-            ref TestSupportedLocales supportedLocales = ref GetSingleton<BlobRefData<TestSupportedLocales>>().Resolve;
+            ref Locales supportedLocales = ref GetSingleton<BlobRefData<Locales>>().Resolve;
 
             Debug.LogFormat("Current default locale is: {0}", supportedLocales.Default.Value.ToString());
 
@@ -54,15 +54,15 @@ namespace Hydrogen.Entities.Tests
         {
             RequireForUpdate(
                 GetEntityQuery(
-                    ComponentType.ReadOnly<SingletonConverter<TestTimeConfig>>(),
+                    ComponentType.ReadOnly<SingletonConverter<TimeConfig>>(),
                     ComponentType.ReadOnly<SingletonConverted>()));
 
-            RequireSingletonForUpdate<TestTimeConfig>();
+            RequireSingletonForUpdate<TimeConfig>();
         }
 
         protected override void OnUpdate()
         {
-            var config = GetSingleton<TestTimeConfig>();
+            var config = GetSingleton<TimeConfig>();
 
             Time.fixedDeltaTime = config.FixedDeltaTime;
             Application.targetFrameRate = (int) config.AppTargetFrameRate;
@@ -71,7 +71,7 @@ namespace Hydrogen.Entities.Tests
         }
     }
 
-    public class TestSupportedLocalesConvertSystem : SingletonConvertSystem<BlobRefData<TestSupportedLocales>> { }
+    public class TestSupportedLocalesConvertSystem : SingletonConvertSystem<BlobRefData<Locales>> { }
 
-    public class TestTimeConfigConvertSystem : SingletonConvertSystem<TestTimeConfig> { }
+    public class TestTimeConfigConvertSystem : SingletonConvertSystem<TimeConfig> { }
 }

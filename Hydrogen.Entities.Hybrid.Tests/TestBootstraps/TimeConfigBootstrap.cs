@@ -6,5 +6,5 @@ using UnityEngine;
 namespace Hydrogen.Entities.Tests
 {
     [DisallowMultipleComponent]
-    public sealed class TestTimeConfigBootstrap : SingletonConverterDataBootstrap<TestTimeConfig> { }
+    public class TimeConfigBootstrap : SingletonConverterDataBootstrap<TimeConfig> { }
 }

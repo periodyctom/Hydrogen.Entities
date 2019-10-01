@@ -6,7 +6,7 @@ using UnityEngine;
 
 namespace Hydrogen.Entities.Tests
 {
-    [CreateAssetMenu(menuName = "Hidden/DontUse")]
+    [CreateAssetMenu(menuName = "Hydrogen/Entities/Tests/PrefabCollection"/*"Hidden/DontUse"*/)]
     
     public class PrefabCollection : ScriptableObject, IConvertScriptableObjectToBlob<PrefabCollectionBlob>, 
                                     IDeclareReferencedPrefabs

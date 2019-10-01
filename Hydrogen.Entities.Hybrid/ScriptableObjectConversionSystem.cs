@@ -14,7 +14,6 @@ namespace Hydrogen.Entities
     /// </summary>
     /// <param name="src">The SO to convert.</param>
     /// <param name="convert">The <see cref="ScriptableObjectConversionSystem"/>, allowing us to get references to other converted blobs.</param>
-    /// <param name="goConvert">The <see cref="GameObjectConversionSystem"/>, allowing us to get prefab references if they've been declared.</param>
     /// <typeparam name="T0">The concrete type of the SO to be converted.</typeparam>
     /// <typeparam name="T1">The struct type our Blob asset reference points to.</typeparam>
     public delegate BlobAssetReference<T1> ScriptToBlobFunc<in T0, T1>(
