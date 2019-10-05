@@ -3,6 +3,7 @@ using NUnit.Framework;
 using Unity.Entities;
 using UnityEngine;
 using static Unity.Entities.GameObjectConversionUtility;
+using static UnityEngine.ScriptableObject;
 using Object = UnityEngine.Object;
 
 // ReSharper disable CheckNamespace
@@ -13,17 +14,16 @@ namespace Hydrogen.Entities.Tests
     using LocalesRef = BlobRefData<Locales>;
     using LocalesConverter = SingletonConverter<BlobRefData<Locales>>;
 
-    [TestFixture]
-    public class SingletonConverterBootstrapTests : SingletonConversionTestFixture
+    public abstract class SingletonConverterHybridTestFixture : SingletonConversionTestFixture
     {
-        private static readonly BlobCreateAndAdd<LocalesInterfaceBootstrap, Locales, LocalesDefinition>
-            sm_createInterfaceBootstrap =
+        protected static readonly BlobCreateAndAdd<LocalesInterfaceBootstrap, Locales, LocalesDefinition>
+            CachedCreateInterfaceBootstrap =
                 CreateInterfaceBootstrap<LocalesInterfaceBootstrap, Locales, LocalesDefinition>;
 
-        private static readonly BlobCreateAndAdd<LocalesCustomBootstrap, Locales, LocalesDefinition>
-            sm_createCustomBootstrap = CreateCustomBootstrap<LocalesCustomBootstrap, Locales, LocalesDefinition>;
+        protected static readonly BlobCreateAndAdd<LocalesCustomBootstrap, Locales, LocalesDefinition>
+            CachedCreateCustomBootstrap = CreateCustomBootstrap<LocalesCustomBootstrap, Locales, LocalesDefinition>;
 
-        private static readonly Action<LocalesRef, LocalesDefinition> sm_assertMatchesLocales = AssertMatchesLocales;
+        protected static readonly Action<LocalesRef, LocalesDefinition> sm_assertMatchesLocales = AssertMatchesLocales;
 
         // TODO: Produce correct converter(s) from Prefabs
         // TODO: Load from pre-converted test subscene
@@ -37,7 +37,7 @@ namespace Hydrogen.Entities.Tests
             bootstrap.DontReplaceIfLoaded = dontReplace;
         }
 
-        private static void SetBlobBootstrap<T0, T1, T2>(T0 bootstrap, T2 src, bool dontReplace)
+        protected static void SetBlobBootstrap<T0, T1, T2>(T0 bootstrap, T2 src, bool dontReplace)
             where T0 : SingletonConverterBlobBootstrap<T1, T2>
             where T1 : struct
             where T2 : ScriptableObject
@@ -46,7 +46,7 @@ namespace Hydrogen.Entities.Tests
             bootstrap.DontReplaceIfLoaded = dontReplace;
         }
 
-        private static T0 CreateDataBootstrap<T0, T1>(string name, T1 src, bool dontReplace = false)
+        protected static T0 CreateDataBootstrap<T0, T1>(string name, T1 src, bool dontReplace = false)
             where T0 : SingletonConverterDataBootstrap<T1>
             where T1 : struct, IComponentData
         {
@@ -57,7 +57,7 @@ namespace Hydrogen.Entities.Tests
             return bootstrap;
         }
 
-        private static T0 CreateBlobBootstrap<T0, T1, T2>(string name, T2 src, bool dontReplace = false)
+        protected static T0 CreateBlobBootstrap<T0, T1, T2>(string name, T2 src, bool dontReplace = false)
             where T0 : SingletonConverterBlobBootstrap<T1, T2>
             where T1 : struct
             where T2 : ScriptableObject
@@ -69,24 +69,24 @@ namespace Hydrogen.Entities.Tests
             return bootstrap;
         }
 
-        private static T0 CreateInterfaceBootstrap<T0, T1, T2>(string name, T2 src, bool dontReplace)
+        protected static T0 CreateInterfaceBootstrap<T0, T1, T2>(string name, T2 src, bool dontReplace)
             where T0 : SingletonConverterBlobInterfaceBootstrap<T1, T2>
             where T1 : struct
             where T2 : ScriptableObject, IConvertScriptableObjectToBlob<T1> =>
             CreateBlobBootstrap<T0, T1, T2>(name, src, dontReplace);
 
-        private static T0 CreateCustomBootstrap<T0, T1, T2>(string name, T2 src, bool dontReplace)
+        protected static T0 CreateCustomBootstrap<T0, T1, T2>(string name, T2 src, bool dontReplace)
             where T0 : SingletonConverterBlobCustomBootstrap<T1, T2>
             where T1 : struct
             where T2 : ScriptableObject =>
             CreateBlobBootstrap<T0, T1, T2>(name, src, dontReplace);
 
-        private delegate T0 BlobCreateAndAdd<out T0, T1, in T2>(string name, T2 src, bool dontReplace)
+        protected delegate T0 BlobCreateAndAdd<out T0, T1, in T2>(string name, T2 src, bool dontReplace)
             where T0 : SingletonConverterBlobBootstrap<T1, T2>
             where T1 : struct
             where T2 : ScriptableObject;
 
-        private void AssertBlobConversion<T0, T1, T2>(
+        protected void AssertBlobConversion<T0, T1, T2>(
             SingletonQueries query,
             string name,
             BlobCreateAndAdd<T0, T1, T2> createAndAdd,
@@ -133,7 +133,7 @@ namespace Hydrogen.Entities.Tests
             }
         }
 
-        private static void AssertMatchesLocales(LocalesRef data, LocalesDefinition definition)
+        protected static void AssertMatchesLocales(LocalesRef data, LocalesDefinition definition)
         {
             ref Locales resolved = ref data.Resolve;
             int localesLen = resolved.Available.Length;
@@ -159,9 +159,7 @@ namespace Hydrogen.Entities.Tests
             }
         }
 
-        #region SimpleDataSingletons
-
-        private void AssertTimeConfigBootstrap(Entity converterEntity, TimeConfig expected)
+        protected void AssertTimeConfigBootstrap(Entity converterEntity, TimeConfig expected)
         {
             Assert.IsTrue(m_Manager.HasComponent<TimeConfigConverter>(converterEntity));
 
@@ -172,7 +170,11 @@ namespace Hydrogen.Entities.Tests
             var singleton = m_timeConfigs.Singleton.GetSingleton<TimeConfig>();
             AssertTimeConfig(singleton, expected);
         }
+    }
 
+    [TestFixture]
+    public class SingletonConverterBootstrapTests : SingletonConverterHybridTestFixture
+    {
         [Test]
         public void DataBootstrap_CreatesCorrectSingleton()
         {
@@ -187,26 +189,18 @@ namespace Hydrogen.Entities.Tests
             AssertTimeConfigBootstrap(convertedEntity, expected);
         }
 
-        #endregion
-
-        #region ScriptableObject to Blob (via Interface)
-
         [Test]
         public void ScriptableObjectSingleton_FromInterface_CreatesCorrectConverters()
         {
             AssertBlobConversion(
                 m_locales,
                 "LocalesInterfaceBootstrap",
-                sm_createInterfaceBootstrap,
+                CachedCreateInterfaceBootstrap,
                 false,
                 m_assertSupportedLocales,
                 sm_assertMatchesLocales,
-                ScriptableObject.CreateInstance<LocalesDefinition>());
+                CreateInstance<LocalesDefinition>());
         }
-
-        #endregion
-
-        #region ScriptableObject to Blob (via function)
 
         [Test]
         public void ScriptableObjectSingleton_FromFunction_CreatesCorrectConverters()
@@ -214,16 +208,12 @@ namespace Hydrogen.Entities.Tests
             AssertBlobConversion(
                 m_locales,
                 "LocalesInterfaceBootstrap",
-                sm_createCustomBootstrap,
+                CachedCreateCustomBootstrap,
                 false,
                 m_assertSupportedLocales,
                 sm_assertMatchesLocales,
-                ScriptableObject.CreateInstance<LocalesDefinition>());
+                CreateInstance<LocalesDefinition>());
         }
-
-        #endregion
-
-        #region Load converters from prefabs
 
         [Test]
         public void DataSingletons_LoadConvertersFromPrefab()
@@ -284,112 +274,8 @@ namespace Hydrogen.Entities.Tests
 
             m_locales.AssertCounts(0, 0, 1);
         }
-        
+
         [Test, Ignore("Not implemented!")]
         public void Singletons_CanLoadUserCreatedSubscene_AtRuntime() { }
-
-        #endregion
-        
-        // TODO: Move to an editor-only test assembly.
-        // #region Subscene tests
-        //
-        // [UnityTest]
-        // public IEnumerator EndToEnd_CanCreateConvertersInSubscene_AndLoadFromSubscene()
-        // {
-        //     GUID guid = GUID.Generate();
-        //     Scene temp = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene);
-        //     EditorSceneManager.SetActiveScene(temp);
-        //
-        //     var expectedTimeConfig = new TimeConfig(120, 1.0f / 120.0f);
-        //
-        //     TimeConfigBootstrap timeConfigBootstrap = CreateDataBootstrap<TimeConfigBootstrap, TimeConfig>(
-        //         "TestTimeConfig",
-        //         expectedTimeConfig);
-        //
-        //     Assert.IsTrue(timeConfigBootstrap.gameObject.scene == temp);
-        //
-        //     GameObject prefab = TestUtilities.LoadPrefab("TestSupportedLocalesCustomBootstrap");
-        //
-        //     LocalesDefinition expectedLocales = prefab.GetComponent<LocalesCustomBootstrap>().Source;
-        //
-        //     GameObject instance = Object.Instantiate(prefab);
-        //     Assert.IsTrue(instance.scene == temp);
-        //
-        //     SceneData[] entitySceneData = EditorEntityScenes.WriteEntityScene(temp, guid);
-        //     Assert.IsTrue(1 == entitySceneData.Length);
-        //
-        //     Entity sceneEntity = m_Manager.CreateEntity();
-        //     m_Manager.AddComponentData(sceneEntity, entitySceneData[0]);
-        //     m_Manager.AddComponentData(sceneEntity, new RequestSceneLoaded());
-        //
-        //     for (int i = 0; i < 1000; i++)
-        //     {
-        //         World.GetOrCreateSystem<SubSceneStreamingSystem>().Update();
-        //
-        //         if (m_locales.PreConverted.CalculateEntityCount() == 0
-        //          || m_timeConfigs.PreConverted.CalculateEntityCount() == 0)
-        //             break;
-        //
-        //         yield return null;
-        //     }
-        //
-        //     m_locales.AssertCounts(1, 0, 0);
-        //     m_timeConfigs.AssertCounts(1, 0, 0);
-        //
-        //     World.Update();
-        //
-        //     m_locales.AssertCounts(0, 1, 1);
-        //     m_timeConfigs.AssertCounts(0, 1, 1);
-        //
-        //     var timeConfigSingleton = m_timeConfigs.Singleton.GetSingleton<TimeConfig>();
-        //     AssertTimeConfig(timeConfigSingleton, expectedTimeConfig);
-        //
-        //     var testLocalesSingleton = m_locales.Singleton.GetSingleton<LocalesRef>();
-        //     sm_assertMatchesLocales.Invoke(testLocalesSingleton, expectedLocales);
-        //
-        //     m_Manager.RemoveComponent<RequestSceneLoaded>(sceneEntity);
-        //
-        //     uint subSceneStreamingVersion = World.GetOrCreateSystem<SubSceneStreamingSystem>().LastSystemVersion;
-        //
-        //     World.Update();
-        //
-        //     Assert.IsTrue(
-        //         subSceneStreamingVersion < World.GetOrCreateSystem<SubSceneStreamingSystem>().LastSystemVersion);
-        //
-        //     m_timeConfigs.AssertCounts(0, 0, 1);
-        //     m_locales.AssertCounts(0, 0, 1);
-        //
-        //     timeConfigSingleton = m_timeConfigs.Singleton.GetSingleton<TimeConfig>();
-        //     AssertTimeConfig(timeConfigSingleton, expectedTimeConfig);
-        //
-        //     testLocalesSingleton = m_locales.Singleton.GetSingleton<LocalesRef>();
-        //     sm_assertMatchesLocales.Invoke(testLocalesSingleton, expectedLocales);
-        //
-        //     Entity dontReplace = m_Manager.CreateEntity(typeof(TimeConfigConverter));
-        //     Entity doReplace = m_Manager.CreateEntity(typeof(TimeConfigConverter));
-        //
-        //     expectedTimeConfig = new TimeConfig(60, 1.0f / 60.0f);
-        //     var unexpectedTimeConfig = new TimeConfig(30, 1.0f / 30.0f);
-        //
-        //     m_Manager.SetComponentData(dontReplace, new TimeConfigConverter(unexpectedTimeConfig, true));
-        //     m_Manager.SetComponentData(doReplace, new TimeConfigConverter(expectedTimeConfig));
-        //
-        //     m_locales.AssertCounts(0, 0, 1);
-        //     m_timeConfigs.AssertCounts(2, 0, 1);
-        //
-        //     World.Update();
-        //
-        //     m_locales.AssertCounts(0, 0, 1);
-        //     m_timeConfigs.AssertCounts(0, 2, 1);
-        //     timeConfigSingleton = m_timeConfigs.Singleton.GetSingleton<TimeConfig>();
-        //     AssertTimeConfig(timeConfigSingleton, expectedTimeConfig);
-        //
-        //     World.Update();
-        //
-        //     m_locales.AssertCounts(0, 0, 1);
-        //     m_timeConfigs.AssertCounts(0, 0, 1);
-        // }
-        //
-        // #endregion
     }
 }
