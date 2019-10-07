@@ -1,7 +1,10 @@
 ﻿using System;
+using System.Collections;
 using NUnit.Framework;
 using Unity.Entities;
 using UnityEngine;
+using UnityEngine.SceneManagement;
+using UnityEngine.TestTools;
 using static Unity.Entities.GameObjectConversionUtility;
 using static UnityEngine.ScriptableObject;
 using Object = UnityEngine.Object;
@@ -274,8 +277,5 @@ namespace Hydrogen.Entities.Tests
 
             m_locales.AssertCounts(0, 0, 1);
         }
-
-        [Test, Ignore("Not implemented!")]
-        public void Singletons_CanLoadUserCreatedSubscene_AtRuntime() { }
     }
 }

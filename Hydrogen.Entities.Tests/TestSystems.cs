@@ -3,6 +3,7 @@
 // ReSharper disable CheckNamespace
 
 using System.Text;
+using Unity.Collections;
 using Unity.Entities;
 using UnityEngine;
 
@@ -71,7 +72,38 @@ namespace Hydrogen.Entities.Tests
         }
     }
 
-    public class TestSupportedLocalesConvertSystem : SingletonConvertSystem<BlobRefData<Locales>> { }
+    public class TestSupportedLocalesConvertSystem : SingletonConvertSystem<BlobRefData<Locales>>
+    {
+        protected override BlobRefData<Locales> Prepare(BlobRefData<Locales> data)
+        {
+            var b = new BlobBuilder(Allocator.Persistent);
+            ref Locales src = ref data.Resolve;
+
+            ref Locales dst = ref b.ConstructRoot<Locales>();
+
+            int availLen = src.Available.Length;
+            BlobBuilderArray<NativeString64> dstAvailable = b.Allocate(ref dst.Available, availLen);
+
+            for (int i = 0; i < availLen; i++)
+            {
+                ref NativeString64 srcStr = ref src.Available[i];
+                ref NativeString64 dstStr = ref dstAvailable[i];
+                dstStr = srcStr;
+            }
+
+            ref NativeString64 srcDefault = ref src.Default.Value;
+            ref NativeString64 dstDefault = ref b.Allocate(ref dst.Default);
+            dstDefault = srcDefault;
+
+            BlobAssetReference<Locales> reference = b.CreateBlobAssetReference<Locales>(Allocator.Persistent);
+
+            data.Value = reference;
+            
+            b.Dispose();
+
+            return data;
+        }
+    }
 
     public class TestTimeConfigConvertSystem : SingletonConvertSystem<TimeConfig> { }
 }

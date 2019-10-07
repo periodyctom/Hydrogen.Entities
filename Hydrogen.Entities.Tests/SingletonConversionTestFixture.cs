@@ -141,7 +141,7 @@ namespace Hydrogen.Entities.Tests
 
             ref NativeString64 defaultStr = ref builder.Allocate(ref root.Default);
             defaultStr = new NativeString64(available[0]);
-
+            
             int availableLen = available.Length;
             BlobBuilderArray<NativeString64> builderArray = builder.Allocate(ref root.Available, available.Length);
 
@@ -158,7 +158,7 @@ namespace Hydrogen.Entities.Tests
             return refData;
         }
 
-        public static LocalesRef CreateLocaleRefData(params string[] available) =>
+        protected static LocalesRef CreateLocaleRefData(params string[] available) =>
             new LocalesRef(CreateLocaleData(available));
     }
 }

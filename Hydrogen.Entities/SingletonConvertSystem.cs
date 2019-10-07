@@ -29,13 +29,13 @@ namespace Hydrogen.Entities
         private static readonly string sm_typeName = typeof(T).Name;
 
         public SingletonConvertSystem() => m_process = Process;
-        
+
         protected override void OnCreate()
         {
             m_candidates = new NativeList<(T, bool)>(4, Allocator.Persistent);
 
             // ReSharper disable InconsistentNaming
-            
+
             ComponentType singletonTypeRW = ComponentType.ReadWrite<T>();
             ComponentType singletonTypeRO = ComponentType.ReadOnly<SingletonConverter<T>>();
 
@@ -53,7 +53,7 @@ namespace Hydrogen.Entities
         {
             m_candidates.Dispose();
         }
-        
+
         protected override void OnUpdate()
         {
             int postConvertChunksLen = m_postConvertedQuery.CalculateChunkCountWithoutFiltering();
@@ -126,6 +126,8 @@ namespace Hydrogen.Entities
 
         private void FinalizeCandidate(T data, bool dontReplace)
         {
+            data = Prepare(data);
+
             if (!m_hasPreviousValue)
             {
                 EntityManager.CreateEntity(m_singletonArchetype);
@@ -139,5 +141,7 @@ namespace Hydrogen.Entities
 
         private void Process([ReadOnly] ref SingletonConverter<T> converter) =>
             m_candidates.Add((converter.Value, converter.DontReplace));
+
+        protected virtual T Prepare(T data) => data;
     }
 }

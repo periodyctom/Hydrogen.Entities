@@ -114,7 +114,8 @@ namespace Hydrogen.Entities.Tests
 
             // Check Don't Replace
             var dontReplaceConverter = new SingletonConverter<T>(dontReplace, true);
-            AssertDontReplaceConversion(queries, archetype, assertSame, dontReplaceConverter, replaceConverter);
+
+            AssertDontReplaceConversion(queries, archetype, assertSame, dontReplaceConverter, replace);
 
             // Check Destroy
             Entity singletonEntity = queries.Singleton.GetSingletonEntity();
@@ -149,9 +150,13 @@ namespace Hydrogen.Entities.Tests
             World.Update();
 
             queries.AssertCounts(0, len, 1);
-
+            
             var singleton = queries.Singleton.GetSingleton<T>();
             assertSame(singleton, converters[expectedFinalIndex]);
+            
+            World.Update();
+            
+            queries.AssertCounts(0, 0, 1);
         }
 
         #region Data Converter
@@ -194,22 +199,29 @@ namespace Hydrogen.Entities.Tests
 
         #region Blob Converter
 
+        private static void TryDispose(LocalesRef refData)
+        {
+            if (refData.IsCreated)
+                refData.Value.Dispose();
+        }
+
         [Test]
         public void BlobConverter_SetsAndDestroysSingleton_WithSerialConverters()
         {
-            LocalesRef initial = CreateLocaleRefData("en", "fr", "it", "de", "es");
-            LocalesRef replace = CreateLocaleRefData("zh", "ja", "ko");
-            LocalesRef dontReplace = CreateLocaleRefData("en-us", "en-gb", "la");
-
+            
+            LocalesConverter initial = CreateLocaleRefData("en", "fr", "it", "de", "es");
+            LocalesConverter replace = CreateLocaleRefData("zh", "ja", "ko");
+            LocalesConverter dontReplace = CreateLocaleRefData("en-us", "en-gb", "la");
+            
             try
             {
                 TestSimpleConversion(m_locales, m_assertSupportedLocales, initial, replace, dontReplace);
             }
             finally
             {
-                initial.Value.Dispose();
-                replace.Value.Dispose();
-                dontReplace.Value.Dispose();
+                TryDispose(initial);
+                TryDispose(replace);
+                TryDispose(dontReplace);
             }
         }
 
@@ -234,10 +246,7 @@ namespace Hydrogen.Entities.Tests
             finally
             {
                 for (int i = 0; i < converters.Length; i++)
-                {
-                    LocalesRef blobRefData = converters[i].Value;
-                    blobRefData.Value.Dispose();
-                }
+                    TryDispose(converters[i].Value);
 
                 converters.Dispose();
             }
