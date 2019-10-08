@@ -98,7 +98,7 @@ namespace Hydrogen.Entities
                             continue;
 
                         data = nextData;
-                        dontReplace = nextDontReplace;
+                        dontReplace = false;
                     }
 
                     FinalizeCandidate(data, dontReplace);
@@ -143,5 +143,11 @@ namespace Hydrogen.Entities
             m_candidates.Add((converter.Value, converter.DontReplace));
 
         protected virtual T Prepare(T data) => data;
+    }
+
+    public abstract class SingletonBlobConvertSystem<T> : SingletonConvertSystem<BlobRefData<T>>
+        where T : struct
+    {
+        protected abstract override BlobRefData<T> Prepare(BlobRefData<T> data);
     }
 }
