@@ -6,7 +6,7 @@ using UnityEngine;
 namespace Hydrogen.Entities.Tests
 {
     [DisallowMultipleComponent]
-    public class LocalesCustomBootstrap : SingletonConverterBlobCustomBootstrap<Locales, LocalesDefinition>
+    public class LocalesCustomAuthoring : SingletonConvertBlobCustomAuthoring<Locales, LocalesDefinition>
     {
         private ScriptToBlobFunc<LocalesDefinition, Locales> m_converterFunc;
 

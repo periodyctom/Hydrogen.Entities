@@ -79,15 +79,15 @@ namespace Hydrogen.Entities.Tests
         
             var expectedTimeConfig = new TimeConfig(120, 1.0f / 120.0f);
         
-            TimeConfigBootstrap timeConfigBootstrap = CreateDataBootstrap<TimeConfigBootstrap, TimeConfig>(
+            TimeConfigAuthoring timeConfigAuthoring = CreateDataBootstrap<TimeConfigAuthoring, TimeConfig>(
                 "TestTimeConfig",
                 expectedTimeConfig);
         
-            Assert.IsTrue(timeConfigBootstrap.gameObject.scene == temp);
+            Assert.IsTrue(timeConfigAuthoring.gameObject.scene == temp);
 
             GameObject prefab = TestUtilities.LoadPrefab("LocalesCustomBootstrap");
         
-            LocalesDefinition expectedLocales = prefab.GetComponent<LocalesCustomBootstrap>().Source;
+            LocalesDefinition expectedLocales = prefab.GetComponent<LocalesCustomAuthoring>().Source;
         
             GameObject instance = Object.Instantiate(prefab);
             Assert.IsTrue(instance.scene == temp);

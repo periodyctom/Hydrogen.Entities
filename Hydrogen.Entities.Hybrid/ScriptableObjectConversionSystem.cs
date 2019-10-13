@@ -34,11 +34,6 @@ namespace Hydrogen.Entities
         private unsafe struct BlobData
         {
             [NativeDisableUnsafePtrRestriction] private byte* m_blobRef;
-            private int m_identifier;
-
-            public bool IsValid => m_blobRef != null;
-
-            public int Identifier => m_identifier;
 
             public static BlobData Create<T0>(BlobAssetReference<T0> reference, int identifier)
                 where T0 : struct
@@ -46,7 +41,6 @@ namespace Hydrogen.Entities
                 BlobData blobData = default;
 
                 UnsafeUtility.CopyStructureToPtr(ref reference, &blobData.m_blobRef);
-                blobData.m_identifier = identifier;
 
                 return blobData;
             }
@@ -203,46 +197,6 @@ namespace Hydrogen.Entities
             blobAssetReference = data.AsReference<T1>();
 
             return true;
-        }
-
-        /// <summary>
-        /// Checks if a <see cref="T1"/> blob reference for the <see cref="ScriptableObject"/> of <see cref="T0"/> exits.
-        /// </summary>
-        /// <param name="obj">SO to Check.</param>
-        /// <typeparam name="T0">Concrete type of the SO.</typeparam>
-        /// <typeparam name="T1">Type of the struct our Blob asset will reference.</typeparam>
-        /// <returns>True if the blob already exists and is of the correct type.</returns>
-        public bool HasBlob<T0, T1>(T0 obj)
-            where T0 : ScriptableObject
-            where T1 : struct
-        {
-            return obj != null
-                && m_scriptableToBlob.TryGetValue(obj.GetInstanceID(), out BlobData data)
-                && data.Identifier == typeof(T1).GetHashCode();
-        }
-    }
-    
-    public static class BlobConvertHelpers
-    {
-        public static void Copy<T>(in BlobBuilder builder, ref BlobArray<T> dst, T[] src)
-            where T : struct
-        {
-            int len = src?.Length ?? 0;
-        
-            if (len > 0)
-            {
-                // ReSharper disable once PossiblyImpureMethodCallOnReadonlyVariable
-                BlobBuilderArray<T> array = builder.Allocate(ref dst, len);
-        
-                Assert.IsNotNull(src);
-                
-                for (int i = 0; i < len; i++)
-                    array[i] = src[i];
-            }
-            else
-            {
-                dst = new BlobArray<T>();
-            }
         }
     }
 }

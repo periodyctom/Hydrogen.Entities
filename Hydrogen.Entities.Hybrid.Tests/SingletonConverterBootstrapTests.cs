@@ -19,12 +19,12 @@ namespace Hydrogen.Entities.Tests
 
     public abstract class SingletonConverterHybridTestFixture : SingletonConversionTestFixture
     {
-        protected static readonly BlobCreateAndAdd<LocalesInterfaceBootstrap, Locales, LocalesDefinition>
+        protected static readonly BlobCreateAndAdd<LocalesInterfaceAuthoring, Locales, LocalesDefinition>
             CachedCreateInterfaceBootstrap =
-                CreateInterfaceBootstrap<LocalesInterfaceBootstrap, Locales, LocalesDefinition>;
+                CreateInterfaceBootstrap<LocalesInterfaceAuthoring, Locales, LocalesDefinition>;
 
-        protected static readonly BlobCreateAndAdd<LocalesCustomBootstrap, Locales, LocalesDefinition>
-            CachedCreateCustomBootstrap = CreateCustomBootstrap<LocalesCustomBootstrap, Locales, LocalesDefinition>;
+        protected static readonly BlobCreateAndAdd<LocalesCustomAuthoring, Locales, LocalesDefinition>
+            CachedCreateCustomBootstrap = CreateCustomBootstrap<LocalesCustomAuthoring, Locales, LocalesDefinition>;
 
         protected static readonly Action<LocalesRef, LocalesDefinition> sm_assertMatchesLocales = AssertMatchesLocales;
 
@@ -33,7 +33,7 @@ namespace Hydrogen.Entities.Tests
         // TODO: Build new subscene, convert gos, close subscene, then load sub-scene, converters should be intact.
 
         private static void SetDataBootstrap<T0, T1>(T0 bootstrap, T1 src, bool dontReplace)
-            where T0 : SingletonConverterDataBootstrap<T1>
+            where T0 : SingletonConvertDataAuthoring<T1>
             where T1 : struct, IComponentData
         {
             bootstrap.Source = src;
@@ -41,7 +41,7 @@ namespace Hydrogen.Entities.Tests
         }
 
         protected static void SetBlobBootstrap<T0, T1, T2>(T0 bootstrap, T2 src, bool dontReplace)
-            where T0 : SingletonConverterBlobBootstrap<T1, T2>
+            where T0 : SingletonConvertBlobAuthoring<T1, T2>
             where T1 : struct
             where T2 : ScriptableObject
         {
@@ -50,7 +50,7 @@ namespace Hydrogen.Entities.Tests
         }
 
         protected static T0 CreateDataBootstrap<T0, T1>(string name, T1 src, bool dontReplace = false)
-            where T0 : SingletonConverterDataBootstrap<T1>
+            where T0 : SingletonConvertDataAuthoring<T1>
             where T1 : struct, IComponentData
         {
             var go = new GameObject(name);
@@ -61,7 +61,7 @@ namespace Hydrogen.Entities.Tests
         }
 
         protected static T0 CreateBlobBootstrap<T0, T1, T2>(string name, T2 src, bool dontReplace = false)
-            where T0 : SingletonConverterBlobBootstrap<T1, T2>
+            where T0 : SingletonConvertBlobAuthoring<T1, T2>
             where T1 : struct
             where T2 : ScriptableObject
         {
@@ -73,19 +73,19 @@ namespace Hydrogen.Entities.Tests
         }
 
         protected static T0 CreateInterfaceBootstrap<T0, T1, T2>(string name, T2 src, bool dontReplace)
-            where T0 : SingletonConverterBlobInterfaceBootstrap<T1, T2>
+            where T0 : SingletonConvertBlobInterfaceAuthoring<T1, T2>
             where T1 : struct
             where T2 : ScriptableObject, IConvertScriptableObjectToBlob<T1> =>
             CreateBlobBootstrap<T0, T1, T2>(name, src, dontReplace);
 
         protected static T0 CreateCustomBootstrap<T0, T1, T2>(string name, T2 src, bool dontReplace)
-            where T0 : SingletonConverterBlobCustomBootstrap<T1, T2>
+            where T0 : SingletonConvertBlobCustomAuthoring<T1, T2>
             where T1 : struct
             where T2 : ScriptableObject =>
             CreateBlobBootstrap<T0, T1, T2>(name, src, dontReplace);
 
         protected delegate T0 BlobCreateAndAdd<out T0, T1, in T2>(string name, T2 src, bool dontReplace)
-            where T0 : SingletonConverterBlobBootstrap<T1, T2>
+            where T0 : SingletonConvertBlobAuthoring<T1, T2>
             where T1 : struct
             where T2 : ScriptableObject;
 
@@ -97,7 +97,7 @@ namespace Hydrogen.Entities.Tests
             Action<BlobRefData<T1>, SingletonConverter<BlobRefData<T1>>> checkConverted,
             Action<BlobRefData<T1>, T2> checkMatchesSource,
             T2 expected)
-            where T0 : SingletonConverterBlobBootstrap<T1, T2>
+            where T0 : SingletonConvertBlobAuthoring<T1, T2>
             where T1 : struct
             where T2 : ScriptableObject
         {
@@ -183,11 +183,11 @@ namespace Hydrogen.Entities.Tests
         {
             var expected = new TimeConfig(60, 1.0f / 60.0f);
 
-            TimeConfigBootstrap bootstrap = CreateDataBootstrap<TimeConfigBootstrap, TimeConfig>(
+            TimeConfigAuthoring authoring = CreateDataBootstrap<TimeConfigAuthoring, TimeConfig>(
                 "TimeConfigBootstrap",
                 expected);
 
-            Entity convertedEntity = ConvertGameObjectHierarchy(bootstrap.gameObject, World);
+            Entity convertedEntity = ConvertGameObjectHierarchy(authoring.gameObject, World);
 
             AssertTimeConfigBootstrap(convertedEntity, expected);
         }
@@ -222,7 +222,7 @@ namespace Hydrogen.Entities.Tests
         public void DataSingletons_LoadConvertersFromPrefab()
         {
             GameObject prefab = TestUtilities.LoadPrefab("TimeConfigBootstrap");
-            TimeConfig expected = prefab.GetComponent<TimeConfigBootstrap>().Source;
+            TimeConfig expected = prefab.GetComponent<TimeConfigAuthoring>().Source;
 
             Entity prefabEntity = ConvertGameObjectHierarchy(prefab, World);
             Entity converterEntity = m_Manager.Instantiate(prefabEntity);
@@ -235,7 +235,7 @@ namespace Hydrogen.Entities.Tests
         {
             GameObject prefab = TestUtilities.LoadPrefab("LocalesInterfaceBootstrap");
 
-            LocalesDefinition expected = prefab.GetComponent<LocalesInterfaceBootstrap>().Source;
+            LocalesDefinition expected = prefab.GetComponent<LocalesInterfaceAuthoring>().Source;
 
             Entity interfacePrefabEntity = ConvertGameObjectHierarchy(prefab, World);
             Entity interfaceInstance = m_Manager.Instantiate(interfacePrefabEntity);
@@ -252,7 +252,7 @@ namespace Hydrogen.Entities.Tests
             sm_assertMatchesLocales.Invoke(singleton, expected);
 
             prefab = TestUtilities.LoadPrefab("LocalesCustomBootstrap");
-            expected = prefab.GetComponent<LocalesCustomBootstrap>().Source;
+            expected = prefab.GetComponent<LocalesCustomAuthoring>().Source;
 
             Entity customPrefabEntity = ConvertGameObjectHierarchy(prefab, World);
 

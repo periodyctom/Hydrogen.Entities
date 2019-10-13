@@ -6,5 +6,5 @@ namespace Hydrogen.Entities.Tests
 {
     [DisallowMultipleComponent]
     public class
-        LocalesInterfaceBootstrap : SingletonConverterBlobInterfaceBootstrap<Locales, LocalesDefinition> { }
+        LocalesInterfaceAuthoring : SingletonConvertBlobInterfaceAuthoring<Locales, LocalesDefinition> { }
 }
