@@ -23,7 +23,6 @@ namespace Hydrogen.Entities
         where T1 : struct;
 
     // TODO: Handle Acyclic graphs? Someone will try to do that eventually. Probably me...
-    // TODO: Test interactions with the GO system for prefabs.
 
     /// <summary>
     /// A System similar to the <see cref="GameObjectConversionSystem"/>, but helps with converting <see cref="ScriptableObjects"/> to <see cref="BlobAssetReference{T0}"/>.

@@ -1,6 +1,5 @@
 using System;
 using Unity.Entities;
-// ReSharper disable UnusedMember.Global
 
 namespace Hydrogen.Entities
 {

@@ -1,11 +1,9 @@
 using Unity.Entities;
 using UnityEngine;
 
-// ReSharper disable CheckNamespace
 
 namespace Hydrogen.Entities.Tests
 {
-    [CreateAssetMenu(menuName = "Hydrogen/Entities/Tests/Hybrid/Locales")]
     public class LocalesDefinition : ScriptableObject, IConvertScriptableObjectToBlob<Locales>
     {
         public string[] AvailableLocales =

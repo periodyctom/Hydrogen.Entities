@@ -1,11 +1,9 @@
-﻿using System;
-using System.Collections;
+﻿using System.Collections;
 using NUnit.Framework;
 using Unity.Entities;
 using Unity.Scenes;
 using Unity.Scenes.Editor;
 using UnityEditor;
-using UnityEditor.PackageManager.Requests;
 using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -37,25 +35,25 @@ namespace Hydrogen.Entities.Tests
             {
                 World.GetOrCreateSystem<SubSceneStreamingSystem>().Update();
         
-                if (m_locales.PreConverted.CalculateEntityCount() == 1
-                 && m_timeConfigs.PreConverted.CalculateEntityCount() == 1)
+                if (LocalesQueries.PreConverted.CalculateEntityCount() == 1
+                 && TimeConfigQueries.PreConverted.CalculateEntityCount() == 1)
                     break;
         
                 yield return null;
             }
             
-            m_locales.AssertCounts(1, 0, 0);
-            m_timeConfigs.AssertCounts(1, 0, 0);
+            LocalesQueries.AssertCounts(1, 0, 0);
+            TimeConfigQueries.AssertCounts(1, 0, 0);
         
             World.Update();
         
-            m_locales.AssertCounts(0, 1, 1);
-            m_timeConfigs.AssertCounts(0, 1, 1);
+            LocalesQueries.AssertCounts(0, 1, 1);
+            TimeConfigQueries.AssertCounts(0, 1, 1);
             
             World.Update();
             
-            m_locales.AssertCounts(0, 0, 1);
-            m_timeConfigs.AssertCounts(0, 0, 1);
+            LocalesQueries.AssertCounts(0, 0, 1);
+            TimeConfigQueries.AssertCounts(0, 0, 1);
 
             EntityQuery subScenesQuery = m_Manager.CreateEntityQuery(typeof(SubScene));
             Assert.IsTrue(subScenesQuery.CalculateEntityCount() == 1);
@@ -64,8 +62,8 @@ namespace Hydrogen.Entities.Tests
             
             World.Update();
             
-            m_locales.AssertCounts(0, 0, 1);
-            m_timeConfigs.AssertCounts(0, 0, 1);
+            LocalesQueries.AssertCounts(0, 0, 1);
+            TimeConfigQueries.AssertCounts(0, 0, 1);
             
             EditorSceneManager.CloseScene(scene, true);
         }
@@ -79,13 +77,13 @@ namespace Hydrogen.Entities.Tests
         
             var expectedTimeConfig = new TimeConfig(120, 1.0f / 120.0f);
         
-            TimeConfigAuthoring timeConfigAuthoring = CreateDataBootstrap<TimeConfigAuthoring, TimeConfig>(
+            TimeConfigAuthoring timeConfigAuthoring = CreateDataAuthoring<TimeConfigAuthoring, TimeConfig>(
                 "TestTimeConfig",
                 expectedTimeConfig);
         
             Assert.IsTrue(timeConfigAuthoring.gameObject.scene == temp);
 
-            GameObject prefab = TestUtilities.LoadPrefab("LocalesCustomBootstrap");
+            GameObject prefab = TestUtilities.LoadPrefab("LocalesCustomAuthoring");
         
             LocalesDefinition expectedLocales = prefab.GetComponent<LocalesCustomAuthoring>().Source;
         
@@ -103,39 +101,39 @@ namespace Hydrogen.Entities.Tests
             {
                 World.GetOrCreateSystem<SubSceneStreamingSystem>().Update();
         
-                if (m_locales.PreConverted.CalculateEntityCount() == 1
-                 && m_timeConfigs.PreConverted.CalculateEntityCount() == 1)
+                if (LocalesQueries.PreConverted.CalculateEntityCount() == 1
+                 && TimeConfigQueries.PreConverted.CalculateEntityCount() == 1)
                     break;
         
                 yield return null;
             }
         
-            m_locales.AssertCounts(1, 0, 0);
-            m_timeConfigs.AssertCounts(1, 0, 0);
+            LocalesQueries.AssertCounts(1, 0, 0);
+            TimeConfigQueries.AssertCounts(1, 0, 0);
         
             World.Update();
         
-            m_locales.AssertCounts(0, 1, 1);
-            m_timeConfigs.AssertCounts(0, 1, 1);
+            LocalesQueries.AssertCounts(0, 1, 1);
+            TimeConfigQueries.AssertCounts(0, 1, 1);
         
-            var timeConfigSingleton = m_timeConfigs.Singleton.GetSingleton<TimeConfig>();
+            var timeConfigSingleton = TimeConfigQueries.Singleton.GetSingleton<TimeConfig>();
             AssertTimeConfig(timeConfigSingleton, expectedTimeConfig);
         
-            var testLocalesSingleton = m_locales.Singleton.GetSingleton<LocalesRef>();
-            sm_assertMatchesLocales.Invoke(testLocalesSingleton, expectedLocales);
+            var testLocalesSingleton = LocalesQueries.Singleton.GetSingleton<LocalesRef>();
+            CachedAssertMatchesLocales.Invoke(testLocalesSingleton, expectedLocales);
 
             m_Manager.RemoveComponent<RequestSceneLoaded>(sceneEntity);
             
             World.Update();
         
-            m_timeConfigs.AssertCounts(0, 0, 1);
-            m_locales.AssertCounts(0, 0, 1);
+            TimeConfigQueries.AssertCounts(0, 0, 1);
+            LocalesQueries.AssertCounts(0, 0, 1);
         
-            timeConfigSingleton = m_timeConfigs.Singleton.GetSingleton<TimeConfig>();
+            timeConfigSingleton = TimeConfigQueries.Singleton.GetSingleton<TimeConfig>();
             AssertTimeConfig(timeConfigSingleton, expectedTimeConfig);
         
-            testLocalesSingleton = m_locales.Singleton.GetSingleton<LocalesRef>();
-            sm_assertMatchesLocales.Invoke(testLocalesSingleton, expectedLocales);
+            testLocalesSingleton = LocalesQueries.Singleton.GetSingleton<LocalesRef>();
+            CachedAssertMatchesLocales.Invoke(testLocalesSingleton, expectedLocales);
         
             Entity dontReplace = m_Manager.CreateEntity(typeof(TimeConfigConverter));
             Entity doReplace = m_Manager.CreateEntity(typeof(TimeConfigConverter));
@@ -146,20 +144,20 @@ namespace Hydrogen.Entities.Tests
             m_Manager.SetComponentData(dontReplace, new TimeConfigConverter(unexpectedTimeConfig, true));
             m_Manager.SetComponentData(doReplace, new TimeConfigConverter(expectedTimeConfig));
         
-            m_locales.AssertCounts(0, 0, 1);
-            m_timeConfigs.AssertCounts(2, 0, 1);
+            LocalesQueries.AssertCounts(0, 0, 1);
+            TimeConfigQueries.AssertCounts(2, 0, 1);
         
             World.Update();
         
-            m_locales.AssertCounts(0, 0, 1);
-            m_timeConfigs.AssertCounts(0, 2, 1);
-            timeConfigSingleton = m_timeConfigs.Singleton.GetSingleton<TimeConfig>();
+            LocalesQueries.AssertCounts(0, 0, 1);
+            TimeConfigQueries.AssertCounts(0, 2, 1);
+            timeConfigSingleton = TimeConfigQueries.Singleton.GetSingleton<TimeConfig>();
             AssertTimeConfig(timeConfigSingleton, expectedTimeConfig);
         
             World.Update();
         
-            m_locales.AssertCounts(0, 0, 1);
-            m_timeConfigs.AssertCounts(0, 0, 1);
+            LocalesQueries.AssertCounts(0, 0, 1);
+            TimeConfigQueries.AssertCounts(0, 0, 1);
         }
     }
 }

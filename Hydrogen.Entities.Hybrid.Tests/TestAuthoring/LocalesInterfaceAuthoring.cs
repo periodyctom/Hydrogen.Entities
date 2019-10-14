@@ -1,10 +1,10 @@
 using UnityEngine;
 
-// ReSharper disable CheckNamespace
 
 namespace Hydrogen.Entities.Tests
 {
     [DisallowMultipleComponent]
+    [AddComponentMenu("Hidden/DontUse")]
     public class
         LocalesInterfaceAuthoring : SingletonConvertBlobInterfaceAuthoring<Locales, LocalesDefinition> { }
 }

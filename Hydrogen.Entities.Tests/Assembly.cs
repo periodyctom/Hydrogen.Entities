@@ -1,4 +1,3 @@
-
 using Unity.Entities;
 using Hydrogen.Entities;
 using Hydrogen.Entities.Tests;

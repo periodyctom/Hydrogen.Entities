@@ -145,6 +145,11 @@ namespace Hydrogen.Entities
         protected virtual T Prepare(T data) => data;
     }
 
+    /// <summary>
+    /// A generic system for handling the actual transformation from
+    /// <see cref="SingletonConverter{BlobDataRef{T}}"/> to a Singleton of <typeparamref name="T"/>
+    /// </summary>
+    /// <typeparam name="T">Singleton Blob Reference struct Type</typeparam>
     public abstract class SingletonBlobConvertSystem<T> : SingletonConvertSystem<BlobRefData<T>>
         where T : struct
     {

@@ -5,8 +5,6 @@ using Unity.Entities;
 using UnityEngine;
 using UnityEngine.TestTools;
 
-// ReSharper disable CompareOfFloatsByEqualityOperator
-// ReSharper disable CheckNamespace
 
 namespace Hydrogen.Entities.Tests
 {
@@ -17,7 +15,7 @@ namespace Hydrogen.Entities.Tests
     public class SingletonConverterTests : SingletonConversionTestFixture
     {
         private void AssertSerialConversion<T>(
-            in SingletonQueries queries,
+            SingletonQueries queries,
             EntityArchetype archetype,
             Action<T, SingletonConverter<T>> assertSame,
             SingletonConverter<T> initialData,
@@ -78,7 +76,7 @@ namespace Hydrogen.Entities.Tests
         }
 
         private void AssertDontReplaceConversion<T>(
-            in SingletonQueries queries,
+            SingletonQueries queries,
             EntityArchetype archetype,
             Action<T, SingletonConverter<T>> assertSame,
             SingletonConverter<T> ignoredData,
@@ -95,7 +93,7 @@ namespace Hydrogen.Entities.Tests
         }
 
         private void TestSimpleConversion<T>(
-            in SingletonQueries queries,
+            SingletonQueries queries,
             Action<T, SingletonConverter<T>> assertSame,
             T initial,
             T replace,
@@ -125,7 +123,7 @@ namespace Hydrogen.Entities.Tests
         }
 
         private void TestMultipleConversion<T>(
-            in SingletonQueries queries,
+            SingletonQueries queries,
             EntityArchetype archetype,
             Action<T, SingletonConverter<T>> assertSame,
             NativeArray<SingletonConverter<T>> converters,
@@ -165,8 +163,8 @@ namespace Hydrogen.Entities.Tests
         public void DataConverter_SetsAndDestroysSingleton_WithSerialConverters()
         {
             TestSimpleConversion(
-                m_timeConfigs,
-                m_assertTimeConfigs,
+                TimeConfigQueries,
+                CachedAssertTimeConfigs,
                 new TimeConfig(60, 1.0f / 60.0f),
                 new TimeConfig(30, 1.0f / 30.0f),
                 new TimeConfig(144, 1.0f / 144.0f));
@@ -187,7 +185,7 @@ namespace Hydrogen.Entities.Tests
 
             try
             {
-                TestMultipleConversion(m_timeConfigs, archetype, m_assertTimeConfigs, converters, 2);
+                TestMultipleConversion(TimeConfigQueries, archetype, CachedAssertTimeConfigs, converters, 2);
             }
             finally
             {
@@ -215,7 +213,7 @@ namespace Hydrogen.Entities.Tests
             
             try
             {
-                TestSimpleConversion(m_locales, m_assertSupportedLocales, initial, replace, dontReplace);
+                TestSimpleConversion(LocalesQueries, CachedAssertSupportedLocales, initial, replace, dontReplace);
             }
             finally
             {
@@ -241,7 +239,7 @@ namespace Hydrogen.Entities.Tests
 
             try
             {
-                TestMultipleConversion(m_locales, archetype, m_assertSupportedLocales, converters, 2);
+                TestMultipleConversion(LocalesQueries, archetype, CachedAssertSupportedLocales, converters, 2);
             }
             finally
             {

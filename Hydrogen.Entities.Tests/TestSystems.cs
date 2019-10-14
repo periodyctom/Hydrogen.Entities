@@ -1,11 +1,8 @@
-
-
-// ReSharper disable CheckNamespace
-
 using System.Text;
 using Unity.Collections;
 using Unity.Entities;
 using UnityEngine;
+
 
 namespace Hydrogen.Entities.Tests
 {

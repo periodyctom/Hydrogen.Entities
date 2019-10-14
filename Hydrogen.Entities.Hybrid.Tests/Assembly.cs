@@ -1,4 +1,3 @@
-
 using System.Runtime.CompilerServices;
 using Hydrogen.Entities;
 using Hydrogen.Entities.Tests;

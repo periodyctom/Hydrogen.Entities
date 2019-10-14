@@ -1,9 +1,6 @@
 using UnityEditor;
-using UnityEditor.SceneManagement;
 using UnityEngine;
-using UnityEngine.SceneManagement;
 
-// ReSharper disable CheckNamespace
 
 namespace Hydrogen.Entities.Tests
 {
@@ -16,12 +13,6 @@ namespace Hydrogen.Entities.Tests
         {
             return AssetDatabase.LoadAssetAtPath<GameObject>(
                 $"{kContentPath}{name}.prefab");
-        }
-
-        public static T LoadAsset<T>(string name)
-            where T : UnityEngine.Object
-        {
-            return AssetDatabase.LoadAssetAtPath<T>($"{kContentPath}{name}.asset");
         }
     }
 }

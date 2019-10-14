@@ -161,10 +161,10 @@ MonoBehaviour:
   m_GameObject: {fileID: 529501499}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 6a99e9fc085e5e8438d9242b8e9f4ecc, type: 3}
+  m_Script: {fileID: 11500000, guid: 70f4d8ad7566bd24a984b084600e426f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  Source: {fileID: 11400000, guid: 452ac21a132b4734987ac963e9d3e985, type: 2}
+  Source: {fileID: 11400000, guid: 614795e8c990890469cbe7ac5149e593, type: 2}
   DontReplaceIfLoaded: 0
 --- !u!1 &1879629694
 GameObject:
@@ -206,10 +206,10 @@ MonoBehaviour:
   m_GameObject: {fileID: 1879629694}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: e430a9a759aedfd47aa94d8a2bb2cc5b, type: 3}
+  m_Script: {fileID: 11500000, guid: e0499172d5c5e174988de9a3c3b93c14, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   Source:
-    AppTargetFrameRate: 30
-    FixedDeltaTime: 0.033333335
+    AppTargetFrameRate: 60
+    FixedDeltaTime: 0.016666668
   DontReplaceIfLoaded: 0

@@ -4,13 +4,13 @@ using NUnit.Framework;
 using Unity.Collections;
 using Unity.Entities;
 using Unity.Entities.Tests;
-using UnityEditor;
 using UnityEngine;
+using UnityEngine.TestTools.Utils;
 using Object = UnityEngine.Object;
 
+// ReSharper disable once CheckNamespace
 namespace Hydrogen.Entities.Tests
 {
-    [SuppressMessage("ReSharper", "CompareOfFloatsByEqualityOperator")]
     public class ConvertScriptableObjectToBlobTests : ECSTestsFixture
     {
         private const float kMeaningOfLifeFloat = 42.0f;
@@ -49,15 +49,7 @@ namespace Hydrogen.Entities.Tests
                 int intsLen = Integers.Length;
 
                 if (intsLen > 0)
-                {
-                    BlobBuilderArray<int> intsBuilder = builder.Allocate(ref target.Ints, intsLen);
-
-                    for (int i = 0; i < intsLen; i++)
-                    {
-                        ref int val = ref intsBuilder[i];
-                        val = Integers[i];
-                    }
-                }
+                    builder.Construct(ref target.Ints, Integers);
                 else
                     target.Ints = new BlobArray<int>();
 
@@ -86,7 +78,7 @@ namespace Hydrogen.Entities.Tests
         
         private class NodeDefinition : ScriptableObject, IConvertScriptableObjectToBlob<NodeBlob>
         {
-            public int Value = 0;
+            public int Value;
             
             public NodeDefinition Left;
             public NodeDefinition Right;
@@ -202,12 +194,7 @@ namespace Hydrogen.Entities.Tests
             int intsLen = src.Integers.Length;
 
             if (intsLen > 0)
-            {
-                BlobBuilderArray<int> intsBuilder = builder.Allocate(ref target.Ints, intsLen);
-
-                for (int i = 0; i < intsLen; i++)
-                    intsBuilder[i] = src.Integers[i];
-            }
+                builder.Construct(ref target.Ints, src.Integers);
             else
                 target.Ints = new BlobArray<int>();
 
@@ -358,7 +345,7 @@ namespace Hydrogen.Entities.Tests
             try
             {
                 Assert.IsTrue(original.name == "Test");
-                Assert.IsTrue(original.AFloat == kMeaningOfLifeFloat);
+                Assert.IsTrue(Utils.AreFloatsEqual(original.AFloat, kMeaningOfLifeFloat, float.Epsilon));
                 Assert.IsTrue(
                     original.Integers[0] == sm_integers[0]
                  && original.Integers[1] == sm_integers[1]
@@ -372,14 +359,15 @@ namespace Hydrogen.Entities.Tests
                 ref TestBlob01 functionBlob = ref functionTest.Value;
                 
                 Assert.IsTrue(interfaceBlob.Name.ToString() == functionBlob.Name.ToString());
-                Assert.IsTrue(interfaceBlob.AFloat.Value == functionBlob.AFloat.Value);
+                Assert.IsTrue(
+                    Utils.AreFloatsEqual(interfaceBlob.AFloat.Value, functionBlob.AFloat.Value, float.Epsilon));
                 Assert.IsTrue(interfaceBlob.Ints.Length == functionBlob.Ints.Length);
                 
                 for (int i = 0; i < 4; i++)
                     Assert.IsTrue(interfaceBlob.Ints[i] == functionBlob.Ints[i]);
                 
                 Assert.IsTrue(interfaceBlob.Name.ToString() == original.name);
-                Assert.IsTrue(interfaceBlob.AFloat.Value == original.AFloat);
+                Assert.IsTrue(Utils.AreFloatsEqual(interfaceBlob.AFloat.Value, original.AFloat, float.Epsilon));
                 Assert.IsTrue(interfaceBlob.Ints.Length == original.Integers.Length);
                 
                 for (int i = 0; i < 4; i++)

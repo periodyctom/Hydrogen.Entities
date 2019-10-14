@@ -3,11 +3,12 @@ using Unity.Entities;
 using UnityEngine;
 using UnityEngine.Assertions;
 
+// ReSharper disable once CheckNamespace
 namespace Hydrogen.Entities.Tests
 {
     [RequiresEntityConversion]
     [DisallowMultipleComponent]
-    // [AddComponentMenu("Hidden/DontUse")]
+    [AddComponentMenu("Hidden/DontUse")]
     public class PrefabCollectionBehaviour : MonoBehaviour, IDeclareReferencedPrefabs, IConvertGameObjectToEntity
     {
         public PrefabCollection Collection;

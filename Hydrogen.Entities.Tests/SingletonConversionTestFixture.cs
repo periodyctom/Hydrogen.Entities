@@ -5,8 +5,8 @@ using Unity.Collections;
 using Unity.Entities;
 using Unity.Entities.Tests;
 using UnityEngine;
+using UnityEngine.TestTools.Utils;
 
-// ReSharper disable CheckNamespace
 
 namespace Hydrogen.Entities.Tests
 {
@@ -65,18 +65,18 @@ namespace Hydrogen.Entities.Tests
             }
         }
 
-        protected SingletonQueries m_timeConfigs;
-        protected SingletonQueries m_locales;
+        protected SingletonQueries TimeConfigQueries;
+        protected SingletonQueries LocalesQueries;
 
-        protected readonly Action<TimeConfig, TimeConfigConverter> m_assertTimeConfigs = AssertTimeConfig;
-        protected readonly Action<LocalesRef, LocalesConverter> m_assertSupportedLocales = AssertSupportedLocales;
+        protected readonly Action<TimeConfig, TimeConfigConverter> CachedAssertTimeConfigs = AssertTimeConfig;
+        protected readonly Action<LocalesRef, LocalesConverter> CachedAssertSupportedLocales = AssertSupportedLocales;
 
         protected static void AssertTimeConfig(TimeConfig current, TimeConfigConverter converter)
         {
-            Assert.IsTrue(current.FixedDeltaTime == converter.Value.FixedDeltaTime);
+            Assert.IsTrue(Utils.AreFloatsEqual(current.FixedDeltaTime, converter.Value.FixedDeltaTime, float.Epsilon));
             Assert.IsTrue(current.AppTargetFrameRate == converter.Value.AppTargetFrameRate);
 
-            Assert.IsTrue(current.FixedDeltaTime == Time.fixedDeltaTime);
+            Assert.IsTrue(Utils.AreFloatsEqual(current.FixedDeltaTime, Time.fixedDeltaTime, float.Epsilon));
             Assert.IsTrue(current.AppTargetFrameRate == (uint) Application.targetFrameRate);
         }
 
@@ -108,8 +108,8 @@ namespace Hydrogen.Entities.Tests
         {
             base.Setup();
 
-            m_timeConfigs = SingletonQueries.CreateQueries<TimeConfig>(m_Manager);
-            m_locales = SingletonQueries.CreateQueries<LocalesRef>(m_Manager);
+            TimeConfigQueries = SingletonQueries.CreateQueries<TimeConfig>(m_Manager);
+            LocalesQueries = SingletonQueries.CreateQueries<LocalesRef>(m_Manager);
 
             World world = m_Manager.World;
 
@@ -124,8 +124,8 @@ namespace Hydrogen.Entities.Tests
         [TearDown]
         public override void TearDown()
         {
-            m_timeConfigs.Dispose();
-            m_locales.Dispose();
+            TimeConfigQueries.Dispose();
+            LocalesQueries.Dispose();
 
             base.TearDown();
         }
@@ -141,7 +141,7 @@ namespace Hydrogen.Entities.Tests
 
             ref NativeString64 defaultStr = ref builder.Allocate(ref root.Default);
             defaultStr = new NativeString64(available[0]);
-            
+
             int availableLen = available.Length;
             BlobBuilderArray<NativeString64> builderArray = builder.Allocate(ref root.Available, available.Length);
 

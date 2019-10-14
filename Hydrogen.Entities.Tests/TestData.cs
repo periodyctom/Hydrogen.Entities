@@ -1,7 +1,6 @@
 using System;
 using Unity.Entities;
 
-// ReSharper disable CheckNamespace
 
 namespace Hydrogen.Entities.Tests
 {
