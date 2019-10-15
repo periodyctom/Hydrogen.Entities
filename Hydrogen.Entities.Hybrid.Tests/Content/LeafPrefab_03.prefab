@@ -12,7 +12,7 @@ GameObject:
   - component: {fileID: 6222022812044636957}
   - component: {fileID: 1902080329649361884}
   m_Layer: 0
-  m_Name: LeafPrefab_01
+  m_Name: LeafPrefab_03
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -58,7 +58,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 31321ba15b8f8eb4c954353edc038b1d, type: 2}
+  - {fileID: 10303, guid: 0000000000000000f000000000000000, type: 0}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0

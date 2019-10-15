@@ -12,7 +12,7 @@ GameObject:
   - component: {fileID: 6230109291574410761}
   - component: {fileID: 8093053041340722740}
   m_Layer: 0
-  m_Name: LocalesInterfaceBootstrap
+  m_Name: LocalesInterfaceAuthoring
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

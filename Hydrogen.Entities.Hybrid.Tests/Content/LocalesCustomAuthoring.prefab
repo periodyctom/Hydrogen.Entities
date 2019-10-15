@@ -12,7 +12,7 @@ GameObject:
   - component: {fileID: 91751836223004979}
   - component: {fileID: 956344490191328142}
   m_Layer: 0
-  m_Name: LocalesCustomBootstrap
+  m_Name: LocalesCustomAuthoring
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
