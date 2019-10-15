@@ -26,4 +26,4 @@ This version of Hydrogen.Entities has been tested with 2019.3b4+.
 ## Document History
 | Date       | Reason                               |
 | :--------- | :----------------------------------- |
-| October 09, 2019 | Updated after major revision to 0.2.0 |
+| October 14, 2019 | Updated after major revision to 0.2.0 |

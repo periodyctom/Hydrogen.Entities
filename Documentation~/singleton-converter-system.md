@@ -5,12 +5,31 @@ The SingletonConvertSystem uses the **SingletonConverter&lt;T&gt;** struct type 
 With pure data components, you can use it as-is (if you wish to manually install it into your Systems setup).
 The recommended approach is to create a concrete sub-class that can function with the normal System bootstrapping.
 
-## **SingletonConverter&lt;T&gt;**
-
 For Example:
 ```cs
 public sealed class TimeConfigConvertSystem : SingletonConvertSystem<TimeConfig> { }
 ``` 
+
+## **SingletonConverter&lt;T&gt;**
+
+The **SingletonConverter&lt;T&gt;** [IComponentData struct](https://docs.unity3d.com/Packages/com.unity.entities@0.1/api/Unity.Entities.IComponentData.html) that solves issues with loading singleton data from subscenes.
+It wraps the actual Singleton component data that the user intends to set. It also provides a simple conflict resolution mechanism for different subscenes loading or reloading a singleton's data.
+Using the ```bool DontReplace;``` flag, you can specify that a SingletonConverter&lt;T&gt; loaded in a later subscene won't override data if it's already been set. This is most useful for allowing individual levels to load their own bootstrap configs if loaded without going through the normal application flow.
+An example of this would be having a root/boostrap scene that normally loads all the app config data at startup, but later scenes can also load their own minimum config settings for testing in-editor.
+  
+> **NOTE** A Singleton Converter's concrete type must be [registered in the assembly that contains it](https://docs.unity3d.com/Packages/com.unity.entities@0.1/api/Unity.Entities.RegisterGenericComponentTypeAttribute.html).
+
+For SingletonConverters such as this:
+```cs
+SingletonConverter<BlobDataRef<Locales>>
+SingletonConverter<TimeConfig>
+```
+
+They need to be registered with [assembly attributes](https://docs.microsoft.com/en-us/dotnet/standard/assembly/set-attributes) like this:
+```cs
+[assembly: RegisterGenericComponentType(typeof(SingletonConverter<BlobRefData<Locales>>))]
+[assembly: RegisterGenericComponentType(typeof(SingletonConverter<TimeConfig>))]
+```
 
 ## **SingletonConverted**
 
@@ -47,7 +66,7 @@ public sealed class TimeConfigRefreshSystem : ComponentSystem
 
 # **SingletonBlobConvertSystem&lt;T&gt;**
 
-The SingletonBlobConvertSystem uses the SingletonConverter&lt;T&gt; and BlobRef&lt;T&gt; structs to simplify conversion of Singleton data that references a Blob Asset.
+The SingletonBlobConvertSystem uses the [SingletonConverter&lt;T&gt;](#SingletonConverter&lt;T&gt;) and [BlobRef&lt;T&gt;](#BlobRef&lt;T&gt;) structs to simplify conversion of Singleton data that references a Blob Asset.
 
 Unlike simpler component data, The blob asset created/loaded and assigned to the SingletonConverter&lt;T&gt; will not survive scene reload if loaded from a sub-scene.
 As there's no easy way to transfer this ownership from the subscene memory block to the Entity World in general, this system provides an abstract method that must be overloaded to safely perform the copy.
@@ -93,3 +112,7 @@ public sealed class LocalesConvertSystem : SingletonBlobConvertSystem<Locales>
 
 The BlobRefData&lt;T&gt; struct provides a simple generic way of storing a BlobAssetReference&lt;T&gt; as an [IComponentData](https://docs.unity3d.com/Packages/com.unity.entities@0.1/manual/component_data.html) struct.
 It provides a ```ref T Resolve``` getter property for direct access to the blob data, and only contains the BlobAssetReference&lt;T&gt; as it's value.
+
+
+# Working Examples
+For more examples, see Hydrogen.Entities.Tests and Hydrogen.Entities.Hybrid.Tests for to both verify the package is working correctly and to 
