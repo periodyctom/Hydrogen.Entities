@@ -1,4 +1,6 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
+using System.IO;
 using NUnit.Framework;
 using Unity.Entities;
 using Unity.Scenes;
@@ -19,10 +21,43 @@ namespace Hydrogen.Entities.Tests
     [TestFixture]
     public class SingletonConverterSceneTests : SingletonConverterHybridTestFixture
     {
-        private static Scene OpenScene(string sceneName) =>
-            EditorSceneManager.OpenScene(
-                $"{TestUtilities.kContentPath}{sceneName}.unity",
-                OpenSceneMode.Additive);
+        private string m_tempDirAssetGuid;
+        private string m_tempDirectory;
+
+        [SetUp]
+        public override void Setup()
+        {
+            base.Setup();
+            m_tempDirAssetGuid = AssetDatabase.CreateFolder("Assets", $"TEMP_{Guid.NewGuid().ToString()}");
+            m_tempDirectory = AssetDatabase.GUIDToAssetPath(m_tempDirAssetGuid);
+            Assert.IsTrue(AssetDatabase.IsValidFolder(m_tempDirectory));
+        }
+
+        [TearDown]
+        public override void TearDown()
+        {
+            bool success = AssetDatabase.DeleteAsset(m_tempDirectory);
+            Assert.IsTrue(success);
+            
+            base.TearDown();
+        }
+
+        private Scene OpenScene(string sceneName)
+        {
+            string srcPath = $"{TestUtilities.kContentPath}{sceneName}";
+            string srcScenePath = $"{srcPath}.unity";
+
+            string dstPath = $"{m_tempDirectory}/{sceneName}";
+            string dstScenePath = $"{dstPath}.unity";
+            
+            bool success = AssetDatabase.CopyAsset(srcScenePath, dstScenePath);
+            AssetDatabase.Refresh(
+                ImportAssetOptions.ImportRecursive
+              | ImportAssetOptions.ForceSynchronousImport
+              | ImportAssetOptions.DontDownloadFromCacheServer);
+            
+            return success ? EditorSceneManager.OpenScene(dstScenePath) : new Scene();
+        }
 
         [UnityTest]
         public IEnumerator Singletons_CanLoadUserCreatedSubscene_AtRuntime()
