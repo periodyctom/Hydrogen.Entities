@@ -1,6 +1,6 @@
 {
   "name": "com.periodyc.hydrogen.entities",
-  "version": "0.2.0",
+  "version": "0.2.0-preview.0",
   "displayName": "Hydrogen Entities",
   "description": "A collection of helpers for working with Unity's ECS framework.",
   "unity": "2019.2",
@@ -11,7 +11,8 @@
     "com.unity.test-framework": "1.1.3"
   },
   "keywords": [
-    "entities"
+    "entities",
+    "utility"
   ],
   "author": {
     "name": "Thomas Key",
