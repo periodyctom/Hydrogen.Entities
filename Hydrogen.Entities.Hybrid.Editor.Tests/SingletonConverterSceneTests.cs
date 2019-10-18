@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections;
-using System.IO;
+﻿using System.Collections;
 using NUnit.Framework;
 using Unity.Entities;
 using Unity.Scenes;

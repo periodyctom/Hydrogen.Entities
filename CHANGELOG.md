@@ -1,5 +1,8 @@
 # Changelog
 
+## [0.2.0-preview.1] - 2019-10-17
+- Removed Obsolete parts of the API
+
 ## [0.2.0-preview.0] - 2019-10-17
 - Obsoleted old Config and Singleton API, in favor of the new SingletonConverter<T> Framework
 - Added full unit Test coverage for both ScriptableObjectConversionSystem, and the new SingletonConverter<T> Framework.
