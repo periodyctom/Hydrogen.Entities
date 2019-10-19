@@ -66,11 +66,11 @@ public sealed class TimeConfigRefreshSystem : ComponentSystem
 
 # **SingletonBlobConvertSystem&lt;T&gt;**
 
-The SingletonBlobConvertSystem uses the [SingletonConverter&lt;T&gt;](#SingletonConverter&lt;T&gt;) and [BlobRef&lt;T&gt;](#BlobRef&lt;T&gt;) structs to simplify conversion of Singleton data that references a Blob Asset.
+The SingletonBlobConvertSystem uses the [SingletonConverter&lt;T&gt;](#singletonconvertert) and [BlobRefData&lt;T&gt;](#blobrefdatat) structs to simplify conversion of Singleton data that references a Blob Asset.
 
 Unlike simpler component data, The blob asset created/loaded and assigned to the SingletonConverter&lt;T&gt; will not survive scene reload if loaded from a sub-scene.
 As there's no easy way to transfer this ownership from the subscene memory block to the Entity World in general, this system provides an abstract method that must be overloaded to safely perform the copy.
-The method provided for this purpose is ```protected abstract override BlobRefData&lt;T&gt; Prepare(BlobRefData&lt;T&gt; data);```.
+The method provided for this purpose is ```protected abstract override BlobRefData<T> Prepare(BlobRefData<T> data);```.
 
 For Example:
 ```cs
