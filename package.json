@@ -10,6 +10,28 @@
     "com.unity.jobs": "0.1.1-preview",
     "com.unity.test-framework": "1.1.3"
   },
+  "samples": [
+    {
+      "displayName": "Simple World Converters",
+      "description": "Shows how to implement and use the basic Converters.",
+      "path": "Samples~/SimpleWorldConverter"
+    },
+    {
+      "displayName": "Converters in Subscenes",
+      "description": "Shows how Singleton Converters can be used in a sub-scene",
+      "path": "Samples~/ConvertersInSubscenes"
+    },
+    {
+      "displayName": "Config File Loading",
+      "description": "Shows how to load an ini file from disk and store it in a blob singleton.",
+      "path": "Samples~/ConfigFileLoading"
+    },
+    {
+      "displayName": "Simple Database Example",
+      "description": "Shows how to implement a simple Key-value database with Blob Assets and NativeHashMap.",
+      "path": "Samples~/SimpleDatabaseExample"
+    }
+  ],
   "keywords": [
     "entities",
     "utility"
