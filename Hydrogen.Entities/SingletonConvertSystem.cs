@@ -1,5 +1,6 @@
 using Unity.Collections;
 using Unity.Entities;
+using Unity.Entities.Serialization;
 using UnityEngine;
 using UnityEngine.Assertions;
 
@@ -150,9 +151,80 @@ namespace Hydrogen.Entities
     /// <see cref="SingletonConverter{BlobDataRef{T}}"/> to a Singleton of <typeparamref name="T"/>
     /// </summary>
     /// <typeparam name="T">Singleton Blob Reference struct Type</typeparam>
-    public abstract class SingletonBlobConvertSystem<T> : SingletonConvertSystem<BlobRefData<T>>
+    public unsafe class SingletonBlobConvertSystem<T> : SingletonConvertSystem<BlobRefData<T>>
         where T : struct
     {
-        protected abstract override BlobRefData<T> Prepare(BlobRefData<T> data);
+        protected sealed override BlobRefData<T> Prepare(BlobRefData<T> data)
+        {
+            // yea olde in-place copy-paste trick
+            var writer = new MemoryBinaryWriter();
+            writer.Write(data.Value);
+
+            var reader = new MemoryBinaryReader(writer.Data);
+            BlobAssetReference<T> copy = reader.Read<T>();
+
+            writer.Dispose();
+            reader.Dispose();
+
+            return new BlobRefData<T>(copy);
+        }
     }
+
+    /// <summary>
+    /// Base class for implementing Singleton Loader Component Systems that react
+    /// to Singletons being created or changed.
+    /// Used to avoid having the user write as much Boilerplate code.
+    /// </summary>
+    /// <typeparam name="T">Singleton Component Data type.</typeparam>
+    public abstract class SingletonLoadedComponentSystem<T> : ComponentSystem
+        where T : struct, IComponentData
+    {
+        protected override void OnCreate()
+        {
+            RequireForUpdate(
+                GetEntityQuery(
+                    ComponentType.ReadOnly<SingletonConverter<T>>(),
+                    ComponentType.ReadOnly<SingletonConverted>()));
+
+            RequireSingletonForUpdate<T>();
+        }
+    }
+
+    /// <summary>
+    /// Base class for implementing Singleton Blob Loader Component Systems that react
+    /// to Blob Singletons being created or changed.
+    /// Used to avoid having the user write as much Boilerplate code.
+    /// </summary>
+    /// <typeparam name="T">Asset Blob struct type.</typeparam>
+    public abstract class SingletonBlobLoadedComponentSystem<T> : SingletonLoadedComponentSystem<BlobRefData<T>>
+        where T : struct { }
+
+    /// <summary>
+    /// Base class for implementing Singleton Loader Job Component Systems that react
+    /// to Singletons being created or changed.
+    /// Used to avoid having the user write as much Boilerplate code.
+    /// </summary>
+    /// <typeparam name="T">Singleton Component Data type.</typeparam>
+    public abstract class SingletonLoadedJobComponentSystem<T> : JobComponentSystem
+        where T : struct, IComponentData
+    {
+        protected override void OnCreate()
+        {
+            RequireForUpdate(
+                GetEntityQuery(
+                    ComponentType.ReadOnly<SingletonConverter<T>>(),
+                    ComponentType.ReadOnly<SingletonConverted>()));
+
+            RequireSingletonForUpdate<T>();
+        }
+    }
+
+    /// <summary>
+    /// Base class for implementing Singleton Blob Loader Job Component Systems that react
+    /// to Blob Singletons being created or changed.
+    /// Used to avoid having the user write as much Boilerplate code.
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
+    public abstract class SingletonBlobLoadedJobComponentSystem<T> : SingletonLoadedJobComponentSystem<BlobRefData<T>>
+        where T : struct { }
 }

@@ -114,10 +114,12 @@ namespace Hydrogen.Entities.Tests
             World world = m_Manager.World;
 
             var initGroup = world.GetOrCreateSystem<InitializationSystemGroup>();
-            initGroup.AddSystemToUpdateList(world.CreateSystem<TimeConfigConvertSystem>());
             initGroup.AddSystemToUpdateList(world.CreateSystem<LocalesConvertSystem>());
-            initGroup.AddSystemToUpdateList(world.CreateSystem<TimeConfigRefreshSystem>());
-            initGroup.AddSystemToUpdateList(world.CreateSystem<LocalesRefreshSystem>());
+            initGroup.AddSystemToUpdateList(world.CreateSystem<LocalesLoadedSystem>());
+            initGroup.AddSystemToUpdateList(world.CreateSystem<LocalesLoadedJobSystem>());
+            initGroup.AddSystemToUpdateList(world.CreateSystem<TimeConfigConvertSystem>());
+            initGroup.AddSystemToUpdateList(world.CreateSystem<TimeConfigLoadedSystem>());
+            initGroup.AddSystemToUpdateList(world.CreateSystem<TimeConfigLoadedJobSystem>());
             initGroup.SortSystemUpdateList();
         }
 

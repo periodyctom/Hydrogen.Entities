@@ -1,61 +1,68 @@
 using System.Text;
+using Unity.Burst;
 using Unity.Collections;
 using Unity.Entities;
+using Unity.Jobs;
 using UnityEngine;
-
 
 namespace Hydrogen.Entities.Tests
 {
-    public sealed class LocalesConvertSystem : SingletonBlobConvertSystem<Locales>
-    {
-        protected override BlobRefData<Locales> Prepare(BlobRefData<Locales> data)
-        {
-            var b = new BlobBuilder(Allocator.Persistent);
-            ref Locales src = ref data.Resolve;
-
-            ref Locales dst = ref b.ConstructRoot<Locales>();
-
-            int availLen = src.Available.Length;
-            BlobBuilderArray<NativeString64> dstAvailable = b.Allocate(ref dst.Available, availLen);
-
-            for (int i = 0; i < availLen; i++)
-            {
-                ref NativeString64 srcStr = ref src.Available[i];
-                ref NativeString64 dstStr = ref dstAvailable[i];
-                dstStr = srcStr;
-            }
-
-            ref NativeString64 srcDefault = ref src.Default.Value;
-            ref NativeString64 dstDefault = ref b.Allocate(ref dst.Default);
-            dstDefault = srcDefault;
-
-            BlobAssetReference<Locales> reference = b.CreateBlobAssetReference<Locales>(Allocator.Persistent);
-
-            data.Value = reference;
-            
-            b.Dispose();
-
-            return data;
-        }
-    }
-
     public sealed class TimeConfigConvertSystem : SingletonConvertSystem<TimeConfig> { }
 
     [UpdateInGroup(typeof(InitializationSystemGroup))]
+    [UpdateAfter(typeof(TimeConfigConvertSystem))]
+    public sealed class TimeConfigLoadedSystem : SingletonLoadedComponentSystem<TimeConfig>
+    {
+        protected override void OnUpdate()
+        {
+            var config = GetSingleton<TimeConfig>();
+
+            Time.fixedDeltaTime = config.FixedDeltaTime;
+            Application.targetFrameRate = (int) config.AppTargetFrameRate;
+
+            Debug.Log("Updated Time Config!");
+        }
+    }
+
+    [UpdateInGroup(typeof(InitializationSystemGroup))]
+    [UpdateAfter(typeof(TimeConfigConvertSystem))]
+    public sealed class TimeConfigLoadedJobSystem : SingletonLoadedJobComponentSystem<TimeConfig>
+    {
+        protected override JobHandle OnUpdate(JobHandle inputDeps)
+        {
+            return new TestJob
+            {
+                Config = GetSingleton<TimeConfig>(),
+            }.Schedule(inputDeps);
+        }
+
+        [BurstCompile]
+        private struct TestJob : IJob
+        {
+            [ReadOnly] public TimeConfig Config;
+
+            public void Execute()
+            {
+                TimeConfig modified = Config;
+                modified.FixedDeltaTime *= 2.0f;
+                modified.AppTargetFrameRate *= 2u;
+
+                Log(modified);
+            }
+
+            [BurstDiscard]
+            private void Log(TimeConfig timeConfig) =>
+                Debug.Log($"Modified config in Job: {timeConfig.FixedDeltaTime:N8}|{timeConfig.AppTargetFrameRate:D}");
+        }
+    }
+
+    public sealed class LocalesConvertSystem : SingletonBlobConvertSystem<Locales> { }
+
+    [UpdateInGroup(typeof(InitializationSystemGroup))]
     [UpdateAfter(typeof(LocalesConvertSystem))]
-    public sealed class LocalesRefreshSystem : ComponentSystem
+    public sealed class LocalesLoadedSystem : SingletonBlobLoadedComponentSystem<Locales>
     {
         private readonly StringBuilder m_localeListBuilder = new StringBuilder(1024);
-
-        protected override void OnCreate()
-        {
-            RequireForUpdate(
-                GetEntityQuery(
-                    ComponentType.ReadOnly<SingletonConverter<BlobRefData<Locales>>>(),
-                    ComponentType.ReadOnly<SingletonConverted>()));
-
-            RequireSingletonForUpdate<BlobRefData<Locales>>();
-        }
 
         protected override void OnUpdate()
         {
@@ -79,28 +86,60 @@ namespace Hydrogen.Entities.Tests
         }
     }
 
-    [UpdateInGroup(typeof(InitializationSystemGroup))]
-    [UpdateAfter(typeof(TimeConfigConvertSystem))]
-    public sealed class TimeConfigRefreshSystem : ComponentSystem
+    public sealed class LocalesLoadedJobSystem : SingletonBlobLoadedJobComponentSystem<Locales>
     {
-        protected override void OnCreate()
-        {
-            RequireForUpdate(
-                GetEntityQuery(
-                    ComponentType.ReadOnly<SingletonConverter<TimeConfig>>(),
-                    ComponentType.ReadOnly<SingletonConverted>()));
+        private static readonly StringBuilder sm_builder = new StringBuilder(1024);
 
-            RequireSingletonForUpdate<TimeConfig>();
+        protected override JobHandle OnUpdate(JobHandle inputDeps)
+        {
+            var temp = new NativeList<NativeString64>(8, Allocator.TempJob);
+
+            JobHandle collectLocalesHandle = new CollectLocales
+            {
+                Locales = temp,
+                RefData = GetSingleton<BlobRefData<Locales>>(),
+            }.Schedule(inputDeps);
+
+            JobHandle reportHandle = new LogLocales
+            {
+                Locales = temp,
+            }.Schedule(collectLocalesHandle);
+            
+            return temp.Dispose(reportHandle);
         }
 
-        protected override void OnUpdate()
+        [BurstCompile]
+        private unsafe struct CollectLocales : IJob
         {
-            var config = GetSingleton<TimeConfig>();
+            public NativeList<NativeString64> Locales;
+            [ReadOnly] public BlobRefData<Locales> RefData;
 
-            Time.fixedDeltaTime = config.FixedDeltaTime;
-            Application.targetFrameRate = (int) config.AppTargetFrameRate;
+            public void Execute()
+            {
+                Locales.Clear();
+                ref Locales locales = ref RefData.Resolve;
+                int len = locales.Available.Length;
 
-            Debug.Log("Updated Time Config!");
+                var ptr = (NativeString64*) locales.Available.GetUnsafePtr();
+                Locales.AddRange(ptr, len);
+            }
+        }
+        
+        private struct LogLocales : IJob
+        {
+            [ReadOnly] public NativeList<NativeString64> Locales;
+
+            public void Execute()
+            {
+                int len = Locales.Length;
+                for (int i = 0; i < len; i++)
+                {
+                    sm_builder.AppendLine($"Job logged Locale: {i:D} {Locales[i].ToString()}");
+                }
+                
+                Debug.Log(sm_builder.ToString());
+                sm_builder.Clear();
+            }
         }
     }
 }

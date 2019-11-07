@@ -1,6 +1,8 @@
 {
     "name": "Hydrogen.Entities.Tests",
     "references": [
+        "GUID:e0cd26848372d4e5c891c569017e11f1",
+        "GUID:2665a8d13d1b3f18800f46e256720795",
         "GUID:734d92eba21c94caba915361bd5ac177",
         "GUID:8e2f79f713f5a47dcb69903037d4bc0e",
         "GUID:0acc523941302664db1f4e527237feb3",
@@ -9,7 +11,7 @@
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
-    "allowUnsafeCode": false,
+    "allowUnsafeCode": true,
     "overrideReferences": true,
     "precompiledReferences": [
         "nunit.framework.dll"
@@ -18,6 +20,5 @@
     "defineConstraints": [
         "UNITY_INCLUDE_TESTS"
     ],
-    "versionDefines": [],
-    "noEngineReferences": false
+    "versionDefines": []
 }

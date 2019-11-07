@@ -1,5 +1,9 @@
 # Changelog
 
+## [0.2.0-preview.2] - 2019-11-05
+- Fixed Hydrogen.Entities and Hydrogen.Entities.Hybrid asmdefs not being auto-referenced for projects not using asmdefs.
+- Added Basic Converter Samples.
+
 ## [0.2.0-preview.1] - 2019-10-17
 - Removed Obsolete parts of the API
 
