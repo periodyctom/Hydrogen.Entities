@@ -7,7 +7,6 @@ using Unity.Entities.Tests;
 using UnityEngine;
 using UnityEngine.TestTools.Utils;
 
-
 namespace Hydrogen.Entities.Tests
 {
     using TimeConfigConverter = SingletonConverter<TimeConfig>;
@@ -87,19 +86,13 @@ namespace Hydrogen.Entities.Tests
             ref Locales a = ref current.Resolve;
             ref Locales b = ref converter.Value.Resolve;
 
-            ref NativeString64 aDefault = ref a.Default.Value;
-            ref NativeString64 bDefault = ref b.Default.Value;
-
-            Assert.IsTrue(aDefault.Equals(bDefault));
-            Assert.IsTrue(a.Available.Length == b.Available.Length);
-
             int availableLen = a.Available.Length;
 
             for (int i = 0; i < availableLen; i++)
             {
-                ref NativeString64 aAvailable = ref a.Available[i];
-                ref NativeString64 bAvailable = ref b.Available[i];
-                Assert.IsTrue(aAvailable.Equals(bAvailable));
+                ref BlobString aAvailable = ref a.Available[i];
+                ref BlobString bAvailable = ref b.Available[i];
+                Assert.IsTrue(aAvailable.ToString().Equals(bAvailable.ToString()));
             }
         }
 
@@ -115,11 +108,15 @@ namespace Hydrogen.Entities.Tests
 
             var initGroup = world.GetOrCreateSystem<InitializationSystemGroup>();
             initGroup.AddSystemToUpdateList(world.CreateSystem<LocalesConvertSystem>());
-            initGroup.AddSystemToUpdateList(world.CreateSystem<LocalesLoadedSystem>());
-            initGroup.AddSystemToUpdateList(world.CreateSystem<LocalesLoadedJobSystem>());
+            initGroup.AddSystemToUpdateList(world.CreateSystem<LocalesChangedSystem>());
+            initGroup.AddSystemToUpdateList(world.CreateSystem<LocalesChangedJobSystem>());
+            initGroup.AddSystemToUpdateList(world.CreateSystem<LocalesUnchangedSystem>());
+            initGroup.AddSystemToUpdateList(world.CreateSystem<LocalesUnchangedJobSystem>());
             initGroup.AddSystemToUpdateList(world.CreateSystem<TimeConfigConvertSystem>());
-            initGroup.AddSystemToUpdateList(world.CreateSystem<TimeConfigLoadedSystem>());
-            initGroup.AddSystemToUpdateList(world.CreateSystem<TimeConfigLoadedJobSystem>());
+            initGroup.AddSystemToUpdateList(world.CreateSystem<TimeConfigChangedSystem>());
+            initGroup.AddSystemToUpdateList(world.CreateSystem<TimeConfigChangedJobSystem>());
+            initGroup.AddSystemToUpdateList(world.CreateSystem<TimeConfigUnchangedSystem>());
+            initGroup.AddSystemToUpdateList(world.CreateSystem<TimeConfigUnchangedJobSystem>());
             initGroup.SortSystemUpdateList();
         }
 
@@ -132,25 +129,26 @@ namespace Hydrogen.Entities.Tests
             base.TearDown();
         }
 
-        public static BlobAssetReference<Locales> CreateLocaleData(params string[] available)
+        public static BlobAssetReference<Locales> CreateLocaleData(string name, params string[] available)
         {
             Assert.IsNotNull(available);
             Assert.IsTrue(available.Length > 0);
 
             var builder = new BlobBuilder(Allocator.Temp);
-
             ref Locales root = ref builder.ConstructRoot<Locales>();
-
-            ref NativeString64 defaultStr = ref builder.Allocate(ref root.Default);
-            defaultStr = new NativeString64(available[0]);
+            
+            if(!string.IsNullOrEmpty(name) && name.Length > 0)
+                builder.AllocateString(ref root.Name, name);
+            else
+                root.Name = new BlobString();
 
             int availableLen = available.Length;
-            BlobBuilderArray<NativeString64> builderArray = builder.Allocate(ref root.Available, available.Length);
+            BlobBuilderArray<BlobString> builderArray = builder.Allocate(ref root.Available, available.Length);
 
             for (int i = 0; i < availableLen; i++)
             {
-                ref NativeString64 element = ref builderArray[i];
-                element = new NativeString64(available[i]);
+                ref BlobString element = ref builderArray[i];
+                builder.AllocateString(ref element, available[i]);
             }
 
             BlobAssetReference<Locales> refData = builder.CreateBlobAssetReference<Locales>(Allocator.Persistent);
@@ -160,7 +158,7 @@ namespace Hydrogen.Entities.Tests
             return refData;
         }
 
-        protected static LocalesRef CreateLocaleRefData(params string[] available) =>
-            new LocalesRef(CreateLocaleData(available));
+        protected static LocalesRef CreateLocaleRefData(string name, params string[] available) =>
+            new LocalesRef(CreateLocaleData(name, available));
     }
 }

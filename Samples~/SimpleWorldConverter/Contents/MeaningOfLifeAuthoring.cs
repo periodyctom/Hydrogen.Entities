@@ -1,4 +1,5 @@
-﻿using Unity.Entities;
+﻿using System;
+using Unity.Entities;
 using Hydrogen.Entities;
 using UnityEngine;
 
@@ -10,6 +11,7 @@ namespace Hydrogen.Entities
     {
     }
 
+    [Serializable]
     public struct MeaningOfLifeData : IComponentData
     {
         public int Value;
@@ -19,18 +21,8 @@ namespace Hydrogen.Entities
 
     [UpdateInGroup(typeof(InitializationSystemGroup))]
     [UpdateAfter(typeof(MeaningOfLifeConvertSystem))]
-    public sealed class MeaningOfLifeLoadedSystem : ComponentSystem
+    public sealed class MeaningOfLifeChangedSystem : SingletonChangedComponentSystem<MeaningOfLifeData>
     {
-        protected override void OnCreate()
-        {
-            RequireForUpdate(
-                GetEntityQuery(
-                    ComponentType.ReadOnly<SingletonConverter<MeaningOfLifeData>>(),
-                    ComponentType.ReadOnly<SingletonConverted>()));
-            
-            RequireSingletonForUpdate<MeaningOfLifeData>();
-        }
-
         protected override void OnUpdate()
         {
             var meaningOfLife = GetSingleton<MeaningOfLifeData>();

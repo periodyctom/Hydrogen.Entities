@@ -11,7 +11,7 @@ namespace Hydrogen.Entities.Tests
 
     [UpdateInGroup(typeof(InitializationSystemGroup))]
     [UpdateAfter(typeof(TimeConfigConvertSystem))]
-    public sealed class TimeConfigLoadedSystem : SingletonLoadedComponentSystem<TimeConfig>
+    public sealed class TimeConfigChangedSystem : SingletonChangedComponentSystem<TimeConfig>
     {
         protected override void OnUpdate()
         {
@@ -26,7 +26,84 @@ namespace Hydrogen.Entities.Tests
 
     [UpdateInGroup(typeof(InitializationSystemGroup))]
     [UpdateAfter(typeof(TimeConfigConvertSystem))]
-    public sealed class TimeConfigLoadedJobSystem : SingletonLoadedJobComponentSystem<TimeConfig>
+    public sealed class TimeConfigUnchangedSystem : SingletonUnchangedComponentSystem<TimeConfig>
+    {
+        protected override void OnUpdate()
+        {
+            Entities.With(UnchangedQuery).ForEach(
+                (Entity e, ref SingletonConverter<TimeConfig> d0) =>
+                {
+                    Debug.Log(
+                        $"Wasn't set {e.ToString()}: {d0.Value.AppTargetFrameRate:D}|{d0.DontReplace.ToString()}");
+                });
+        }
+    }
+
+    [UpdateInGroup(typeof(InitializationSystemGroup))]
+    [UpdateAfter(typeof(TimeConfigConvertSystem))]
+    public sealed class TimeConfigUnchangedJobSystem : SingletonUnchangedJobComponentSystem<TimeConfig>
+    {
+        private struct Entry
+        {
+            public Entity Entity;
+            public SingletonConverter<TimeConfig> Converter;
+        }
+        
+        [BurstCompile]
+        private struct CollectJob : IJobForEachWithEntity_EC<SingletonConverter<TimeConfig>>
+        {
+            public NativeList<Entry> Entries;
+            public void Execute(Entity entity, int index, [ReadOnly] ref SingletonConverter<TimeConfig> c0)
+            {
+                Entries.Add(new Entry
+                {
+                    Entity = entity,
+                    Converter = c0,
+                });
+            }
+        }
+        
+        private struct LogJob : IJob
+        {
+            [ReadOnly] public NativeList<Entry> Entries;
+
+            public void Execute()
+            {
+                int len = Entries.Length;
+
+                for (int i = 0; i < len; i++)
+                {
+                    Entry e = Entries[i];
+                    Debug.Log($"Job UnchangedTimeConfig {e.Entity.ToString()}|{e.Converter.DontReplace.ToString()}");
+                }
+            }
+        }
+        
+        protected override JobHandle OnUpdate(JobHandle inputDeps)
+        {
+            var entries = new NativeList<Entry>(
+                UnchangedQuery.CalculateEntityCountWithoutFiltering(),
+                Allocator.TempJob);
+
+            inputDeps = new CollectJob
+            {
+                Entries = entries,
+            }.ScheduleSingle(UnchangedQuery, inputDeps);
+
+            inputDeps = new LogJob
+            {
+                Entries = entries,
+            }.Schedule(inputDeps);
+
+            inputDeps = entries.Dispose(inputDeps);
+
+            return inputDeps;
+        }
+    }
+
+    [UpdateInGroup(typeof(InitializationSystemGroup))]
+    [UpdateAfter(typeof(TimeConfigConvertSystem))]
+    public sealed class TimeConfigChangedJobSystem : SingletonChangedJobComponentSystem<TimeConfig>
     {
         protected override JobHandle OnUpdate(JobHandle inputDeps)
         {
@@ -60,7 +137,7 @@ namespace Hydrogen.Entities.Tests
 
     [UpdateInGroup(typeof(InitializationSystemGroup))]
     [UpdateAfter(typeof(LocalesConvertSystem))]
-    public sealed class LocalesLoadedSystem : SingletonBlobLoadedComponentSystem<Locales>
+    public sealed class LocalesChangedSystem : SingletonBlobChangedComponentSystem<Locales>
     {
         private readonly StringBuilder m_localeListBuilder = new StringBuilder(1024);
 
@@ -68,7 +145,9 @@ namespace Hydrogen.Entities.Tests
         {
             ref Locales supportedLocales = ref GetSingleton<BlobRefData<Locales>>().Resolve;
 
-            Debug.LogFormat("Current default locale is: {0}", supportedLocales.Default.Value.ToString());
+            ref BlobString name = ref supportedLocales.Name;
+
+            m_localeListBuilder.AppendLine(name.ToString());
 
             int availableCount = supportedLocales.Available.Length;
 
@@ -86,60 +165,125 @@ namespace Hydrogen.Entities.Tests
         }
     }
 
-    public sealed class LocalesLoadedJobSystem : SingletonBlobLoadedJobComponentSystem<Locales>
+    [UpdateInGroup(typeof(InitializationSystemGroup))]
+    [UpdateAfter(typeof(LocalesConvertSystem))]
+    public sealed class LocalesChangedJobSystem : SingletonBlobChangedJobComponentSystem<Locales>
     {
         private static readonly StringBuilder sm_builder = new StringBuilder(1024);
 
         protected override JobHandle OnUpdate(JobHandle inputDeps)
         {
-            var temp = new NativeList<NativeString64>(8, Allocator.TempJob);
-
-            JobHandle collectLocalesHandle = new CollectLocales
+            inputDeps = new CollectLocales
             {
-                Locales = temp,
                 RefData = GetSingleton<BlobRefData<Locales>>(),
             }.Schedule(inputDeps);
 
-            JobHandle reportHandle = new LogLocales
-            {
-                Locales = temp,
-            }.Schedule(collectLocalesHandle);
-            
-            return temp.Dispose(reportHandle);
-        }
+            inputDeps = new LogLocales().Schedule(inputDeps);
 
-        [BurstCompile]
-        private unsafe struct CollectLocales : IJob
+            return inputDeps;
+        }
+        
+        private struct CollectLocales : IJob
         {
-            public NativeList<NativeString64> Locales;
             [ReadOnly] public BlobRefData<Locales> RefData;
 
             public void Execute()
             {
-                Locales.Clear();
                 ref Locales locales = ref RefData.Resolve;
+                ref BlobString name = ref locales.Name; 
+                sm_builder.AppendLine(name.ToString());
+                
                 int len = locales.Available.Length;
-
-                var ptr = (NativeString64*) locales.Available.GetUnsafePtr();
-                Locales.AddRange(ptr, len);
+                for (int i = 0; i < len; i++)
+                {
+                    ref BlobString str = ref locales.Available[i];
+                    sm_builder.AppendLine(str.ToString());
+                }
             }
         }
         
         private struct LogLocales : IJob
         {
-            [ReadOnly] public NativeList<NativeString64> Locales;
-
             public void Execute()
             {
-                int len = Locales.Length;
-                for (int i = 0; i < len; i++)
-                {
-                    sm_builder.AppendLine($"Job logged Locale: {i:D} {Locales[i].ToString()}");
-                }
-                
                 Debug.Log(sm_builder.ToString());
                 sm_builder.Clear();
             }
+        }
+    }
+
+    [UpdateInGroup(typeof(InitializationSystemGroup))]
+    [UpdateAfter(typeof(LocalesConvertSystem))]
+    public sealed class LocalesUnchangedSystem : SingletonBlobUnchangedComponentSystem<Locales>
+    {
+        private static readonly StringBuilder sm_stringBuilder = new StringBuilder(1024);
+        private static readonly EntityQueryBuilder.F_ED<SingletonConverter<BlobRefData<Locales>>> sm_logUnchanged =
+            LogUnchanged;
+        
+        protected override void OnUpdate()
+        {
+            Entities.With(UnchangedQuery).ForEach(sm_logUnchanged);
+            Debug.Log(sm_stringBuilder.ToString());
+            sm_stringBuilder.Clear();
+        }
+
+        private static void LogUnchanged(Entity entity, [ReadOnly] ref SingletonConverter<BlobRefData<Locales>> d0)
+        {
+            ref Locales locales = ref d0.Value.Resolve;
+            ref BlobString name = ref locales.Name;
+            sm_stringBuilder.AppendLine($"Unchanged {name.ToString()}");
+            int len = locales.Available.Length;
+
+            for (int i = 0; i < len; i++)
+            {
+                ref BlobString str = ref locales.Available[i];
+                sm_stringBuilder.AppendLine(str.ToString());
+            }
+        }
+    }
+
+    [UpdateInGroup(typeof(InitializationSystemGroup))]
+    [UpdateAfter(typeof(LocalesConvertSystem))]
+    public sealed class LocalesUnchangedJobSystem : SingletonBlobUnchangedJobComponentSystem<Locales>
+    {
+        private static readonly StringBuilder sm_stringBuilder = new StringBuilder(1024);
+
+        private struct CollectUnchanged : IJobForEachWithEntity_EC<SingletonConverter<BlobRefData<Locales>>>
+        {
+            public void Execute(Entity entity, int index, [ReadOnly] ref SingletonConverter<BlobRefData<Locales>> c0)
+            {
+                ref Locales locales = ref c0.Value.Resolve;
+                ref BlobString name = ref locales.Name;
+
+                sm_stringBuilder.AppendLine("Unchanged Locales In Job");
+                sm_stringBuilder.AppendLine(name.ToString());
+                
+                int len = locales.Available.Length;
+
+                for (int i = 0; i < len; i++)
+                {
+                    ref BlobString str = ref locales.Available[i];
+                    sm_stringBuilder.AppendLine(str.ToString());
+                }
+            }
+        }
+        
+        private struct Log : IJob
+        {
+            public void Execute()
+            {
+                Debug.Log(sm_stringBuilder.ToString());
+                sm_stringBuilder.Clear();
+            }
+        }
+
+        protected override JobHandle OnUpdate(JobHandle inputDeps)
+        {
+            inputDeps = new CollectUnchanged().ScheduleSingle(UnchangedQuery, inputDeps);
+
+            inputDeps = new Log().Schedule(inputDeps);
+
+            return inputDeps;
         }
     }
 }

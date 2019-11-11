@@ -53,10 +53,18 @@ namespace Hydrogen.Entities
     }
     
     /// <summary>
-    /// Tag component that indicates the converter entity has delivered the Singleton data to the conversion system.
-    /// Does not necessarily indicate success if there are multiple conflicting Converters.
-    /// The proper way to check what value was set (or not) is to check the actual singleton through the
+    /// Tag component that indicates the converter entity has delivered the Singleton data to the conversion system and is ready to be cleaned up.
     /// <see cref="EntityQuery.GetSingleton{T}()"/> method.
     /// </summary>
     public struct SingletonConverted : IComponentData { }
+    
+    /// <summary>
+    /// Tag component that indicates an Entity with the SingletonConverted tag has data that was set as the current singleton
+    /// </summary>
+    public struct SingletonChanged : IComponentData { }
+    
+    /// <summary>
+    /// Tag component that indicates none of the processed conversions succeeded
+    /// </summary>
+    public struct SingletonUnchanged : IComponentData { }
 }

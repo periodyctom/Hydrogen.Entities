@@ -127,21 +127,18 @@ namespace Hydrogen.Entities.Tests
         protected static void AssertMatchesLocales(BlobRefData<Locales> data, LocalesDefinition definition)
         {
             ref Locales resolved = ref data.Resolve;
+            ref BlobString name = ref resolved.Name;
+            
+            Assert.IsTrue(name.ToString() == definition.name);
+            
             int localesLen = resolved.Available.Length;
-
             int definitionLen = definition.AvailableLocales.Length;
 
             Assert.IsTrue(localesLen == definitionLen);
 
-            ref NativeString64 defaultLocale = ref resolved.Default.Value;
-
-            string defDefaultLocale = definition.AvailableLocales[0];
-
-            Assert.AreEqual(defaultLocale.ToString(), defDefaultLocale);
-
             for (int i = 0; i < localesLen; i++)
             {
-                ref NativeString64 locale = ref resolved.Available[i];
+                ref BlobString locale = ref resolved.Available[i];
                 string localeStr = locale.ToString();
 
                 string defStr = definition.AvailableLocales[i];

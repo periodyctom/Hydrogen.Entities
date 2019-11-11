@@ -20,9 +20,12 @@ namespace Hydrogen.Entities
         public BlobAssetReference<NameList> Convert(ScriptableObjectConversionSystem conversion)
         {
             var builder = new BlobBuilder(Allocator.Temp);
-            var root = builder.ConstructRoot<NameList>();
+            ref NameList root = ref builder.ConstructRoot<NameList>();
             
-            builder.AllocateString(ref root.Name, name);
+            if(!string.IsNullOrEmpty(name) && name.Length > 0)
+                builder.AllocateString(ref root.Name, name);
+            else
+                root.Name = new BlobString();
 
             int len = m_names?.Length ?? 0;
 
@@ -60,7 +63,7 @@ namespace Hydrogen.Entities
 
     [UpdateInGroup(typeof(InitializationSystemGroup))]
     [UpdateAfter(typeof(NameListConvertSystem))]
-    public sealed class NameListLoadedSystem : SingletonBlobLoadedComponentSystem<NameList>
+    public sealed class NameListChangedSystem : SingletonBlobChangedComponentSystem<NameList>
     {
         private readonly StringBuilder m_stringBuilder = new StringBuilder(1024);
 

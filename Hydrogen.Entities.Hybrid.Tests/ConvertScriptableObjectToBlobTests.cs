@@ -37,7 +37,7 @@ namespace Hydrogen.Entities.Tests
 
                 ref TestBlob01 target = ref builder.ConstructRoot<TestBlob01>();
 
-                if(!string.IsNullOrEmpty(name))
+                if(!string.IsNullOrEmpty(name) && name.Length > 0)
                     builder.AllocateString(ref target.Name, name);
                 else
                     target.Name = new BlobString();

@@ -207,9 +207,9 @@ namespace Hydrogen.Entities.Tests
         public void BlobConverter_SetsAndDestroysSingleton_WithSerialConverters()
         {
             
-            LocalesConverter initial = CreateLocaleRefData("en", "fr", "it", "de", "es");
-            LocalesConverter replace = CreateLocaleRefData("zh", "ja", "ko");
-            LocalesConverter dontReplace = CreateLocaleRefData("en-us", "en-gb", "la");
+            LocalesConverter initial = CreateLocaleRefData("initial", "en", "fr", "it", "de", "es");
+            LocalesConverter replace = CreateLocaleRefData("replace", "zh", "ja", "ko");
+            LocalesConverter dontReplace = CreateLocaleRefData("dontReplace", "en-us", "en-gb", "la");
             
             try
             {
@@ -231,10 +231,10 @@ namespace Hydrogen.Entities.Tests
             var converters =
                 new NativeArray<LocalesConverter>(4, Allocator.Temp, NativeArrayOptions.UninitializedMemory)
                 {
-                    [0] = new LocalesConverter(CreateLocaleRefData("zh", "ja", "ko")),
-                    [1] = new LocalesConverter(CreateLocaleRefData("la"), true),
-                    [2] = new LocalesConverter(CreateLocaleRefData("en", "fr", "it", "de", "es")),
-                    [3] = new LocalesConverter(CreateLocaleRefData("en-us", "en-gb"), true)
+                    [0] = new LocalesConverter(CreateLocaleRefData("0","zh", "ja", "ko")),
+                    [1] = new LocalesConverter(CreateLocaleRefData("1","la"), true),
+                    [2] = new LocalesConverter(CreateLocaleRefData("2","en", "fr", "it", "de", "es")),
+                    [3] = new LocalesConverter(CreateLocaleRefData("3","en-us", "en-gb"), true)
                 };
 
             try

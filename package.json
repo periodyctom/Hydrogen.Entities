@@ -17,11 +17,6 @@
       "path": "Samples~/SimpleWorldConverter"
     },
     {
-      "displayName": "Converters in Subscenes",
-      "description": "Shows how Singleton Converters can be used in a sub-scene",
-      "path": "Samples~/ConvertersInSubscenes"
-    },
-    {
       "displayName": "Config File Loading",
       "description": "Shows how to load an ini file from disk and store it in a blob singleton.",
       "path": "Samples~/ConfigFileLoading"

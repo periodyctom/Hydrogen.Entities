@@ -1,7 +1,6 @@
 using System;
 using Unity.Entities;
 
-
 namespace Hydrogen.Entities.Tests
 {
     [Serializable]
@@ -20,7 +19,7 @@ namespace Hydrogen.Entities.Tests
     [Serializable]
     public struct Locales
     {
-        public BlobPtr<NativeString64> Default;
-        public BlobArray<NativeString64> Available;
+        public BlobString Name;
+        public BlobArray<BlobString> Available;
     }
 }

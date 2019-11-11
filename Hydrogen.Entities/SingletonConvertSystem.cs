@@ -19,11 +19,12 @@ namespace Hydrogen.Entities
         private EntityQuery m_postConvertedQuery;
         private EntityQuery m_singletonQuery;
 
-        private readonly EntityQueryBuilder.F_D<SingletonConverter<T>> m_process;
+        private readonly EntityQueryBuilder.F_ED<SingletonConverter<T>> m_process;
 
-        private NativeList<(T, bool)> m_candidates;
+        private NativeList<(Entity, T, bool)> m_candidates;
         private EntityArchetype m_singletonArchetype;
         private ComponentType m_convertedType;
+        private ComponentType m_unchangedType;
 
         private bool m_hasPreviousValue;
 
@@ -33,7 +34,7 @@ namespace Hydrogen.Entities
 
         protected override void OnCreate()
         {
-            m_candidates = new NativeList<(T, bool)>(4, Allocator.Persistent);
+            m_candidates = new NativeList<(Entity, T, bool)>(4, Allocator.Persistent);
 
             // ReSharper disable InconsistentNaming
 
@@ -44,16 +45,14 @@ namespace Hydrogen.Entities
 
             m_singletonArchetype = EntityManager.CreateArchetype(singletonTypeRW);
             m_convertedType = ComponentType.ReadWrite<SingletonConverted>();
+            m_unchangedType = ComponentType.ReadWrite<SingletonUnchanged>();
 
             m_preConvertedQuery = GetEntityQuery(singletonTypeRO, ComponentType.Exclude<SingletonConverted>());
             m_postConvertedQuery = GetEntityQuery(singletonTypeRO, ComponentType.ReadOnly<SingletonConverted>());
             m_singletonQuery = GetEntityQuery(singletonTypeRW);
         }
 
-        protected override void OnDestroy()
-        {
-            m_candidates.Dispose();
-        }
+        protected override void OnDestroy() => m_candidates.Dispose();
 
         protected override void OnUpdate()
         {
@@ -67,6 +66,8 @@ namespace Hydrogen.Entities
             if (preConvertChunksLen <= 0)
                 return;
 
+            bool wasChanged = false;
+
             m_hasPreviousValue = m_singletonQuery.CalculateChunkCountWithoutFiltering() == 1;
 
             Entities.ForEach(m_process);
@@ -77,8 +78,8 @@ namespace Hydrogen.Entities
 
             if (candidatesLength == 1)
             {
-                (T data, bool dontReplace) = m_candidates[0];
-                FinalizeCandidate(data, dontReplace);
+                (Entity entity, T data, bool dontReplace) = m_candidates[0];
+                wasChanged = FinalizeCandidate(entity, data, dontReplace);
             }
             else
             {
@@ -89,66 +90,76 @@ namespace Hydrogen.Entities
 
                 if (!m_hasPreviousValue)
                 {
-                    (T data, bool dontReplace) = m_candidates[0];
+                    (Entity entity, T data, bool dontReplace) = m_candidates[0];
 
                     for (int i = 1; i < candidatesLength; i++)
                     {
-                        (T nextData, bool nextDontReplace) = m_candidates[i];
+                        (Entity nextEntity, T nextData, bool nextDontReplace) = m_candidates[i];
 
                         if (nextDontReplace)
                             continue;
 
                         data = nextData;
                         dontReplace = false;
+                        entity = nextEntity;
                     }
 
-                    FinalizeCandidate(data, dontReplace);
+                    wasChanged = FinalizeCandidate(entity, data, dontReplace);
                 }
                 else
                 {
-                    (var data, bool dontReplace) = (m_singletonQuery.GetSingleton<T>(), false);
+                    (Entity entity, var data, bool dontReplace) =
+                        (Entity.Null, m_singletonQuery.GetSingleton<T>(), false);
 
                     for (int i = 0; i < candidatesLength; i++)
                     {
-                        (T nextData, bool nextDontReplace) = m_candidates[i];
+                        (Entity nextEntity, T nextData, bool nextDontReplace) = m_candidates[i];
 
                         if (nextDontReplace)
                             continue;
 
                         data = nextData;
+                        entity = nextEntity;
                     }
 
-                    FinalizeCandidate(data, dontReplace);
+                    if (entity != Entity.Null)
+                        wasChanged = FinalizeCandidate(entity, data, dontReplace);
                 }
             }
 
             m_candidates.Clear();
+
+            if (!wasChanged)
+            {
+                PostUpdateCommands.AddComponent(m_preConvertedQuery, m_unchangedType);
+            }
         }
 
-        private void FinalizeCandidate(T data, bool dontReplace)
+        private bool FinalizeCandidate(Entity entity, T data, bool dontReplace)
         {
+            if (m_hasPreviousValue && dontReplace)
+                return false;
+
             data = Prepare(data);
 
             if (!m_hasPreviousValue)
-            {
                 EntityManager.CreateEntity(m_singletonArchetype);
-                m_singletonQuery.SetSingleton(data);
-            }
-            else if (!dontReplace)
-            {
-                m_singletonQuery.SetSingleton(data);
-            }
+
+            m_singletonQuery.SetSingleton(data);
+            PostUpdateCommands.AddComponent<SingletonChanged>(entity);
+
+            return true;
         }
 
-        private void Process([ReadOnly] ref SingletonConverter<T> converter) =>
-            m_candidates.Add((converter.Value, converter.DontReplace));
+        private void Process(Entity entity, [ReadOnly] ref SingletonConverter<T> converter) =>
+            m_candidates.Add((entity, converter.Value, converter.DontReplace));
 
         protected virtual T Prepare(T data) => data;
     }
 
     /// <summary>
     /// A generic system for handling the actual transformation from
-    /// <see cref="SingletonConverter{BlobDataRef{T}}"/> to a Singleton of <typeparamref name="T"/>
+    /// SingletonConverter&lt;<see cref="BlobRefData{T}"/>&gt; to a Singleton of BlobRefData&lt;<typeparamref name="T"/>&gt;
     /// </summary>
     /// <typeparam name="T">Singleton Blob Reference struct Type</typeparam>
     public unsafe class SingletonBlobConvertSystem<T> : SingletonConvertSystem<BlobRefData<T>>
@@ -171,60 +182,127 @@ namespace Hydrogen.Entities
     }
 
     /// <summary>
-    /// Base class for implementing Singleton Loader Component Systems that react
-    /// to Singletons being created or changed.
-    /// Used to avoid having the user write as much Boilerplate code.
+    /// Base class for implementing Component Systems that react to Singletons being created or changed.
+    /// Used to avoid having the user write as much boilerplate code.
     /// </summary>
     /// <typeparam name="T">Singleton Component Data type.</typeparam>
-    public abstract class SingletonLoadedComponentSystem<T> : ComponentSystem
+    public abstract class SingletonChangedComponentSystem<T> : ComponentSystem
         where T : struct, IComponentData
     {
-        protected override void OnCreate()
-        {
-            RequireForUpdate(
-                GetEntityQuery(
-                    ComponentType.ReadOnly<SingletonConverter<T>>(),
-                    ComponentType.ReadOnly<SingletonConverted>()));
-
-            RequireSingletonForUpdate<T>();
-        }
+        protected EntityQuery ChangedQuery;
+        protected override void OnCreate() => ChangedQuery = this.SetupChangedQuery<T>(GetEntityQuery);
     }
 
     /// <summary>
-    /// Base class for implementing Singleton Blob Loader Component Systems that react
-    /// to Blob Singletons being created or changed.
-    /// Used to avoid having the user write as much Boilerplate code.
+    /// Base class for implementing Component Systems that react to Blob Singletons being created or changed.
+    /// Used to avoid having the user write as much boilerplate code.
     /// </summary>
     /// <typeparam name="T">Asset Blob struct type.</typeparam>
-    public abstract class SingletonBlobLoadedComponentSystem<T> : SingletonLoadedComponentSystem<BlobRefData<T>>
+    public abstract class SingletonBlobChangedComponentSystem<T> : SingletonChangedComponentSystem<BlobRefData<T>>
         where T : struct { }
 
     /// <summary>
-    /// Base class for implementing Singleton Loader Job Component Systems that react
-    /// to Singletons being created or changed.
-    /// Used to avoid having the user write as much Boilerplate code.
+    /// Base class for implementing Job Component Systems that react to Singletons being created or changed.
+    /// Used to avoid having the user write as much boilerplate code.
     /// </summary>
     /// <typeparam name="T">Singleton Component Data type.</typeparam>
-    public abstract class SingletonLoadedJobComponentSystem<T> : JobComponentSystem
+    public abstract class SingletonChangedJobComponentSystem<T> : JobComponentSystem
         where T : struct, IComponentData
     {
-        protected override void OnCreate()
-        {
-            RequireForUpdate(
-                GetEntityQuery(
-                    ComponentType.ReadOnly<SingletonConverter<T>>(),
-                    ComponentType.ReadOnly<SingletonConverted>()));
+        protected EntityQuery ChangedQuery;
 
-            RequireSingletonForUpdate<T>();
-        }
+        protected override void OnCreate() => ChangedQuery = this.SetupChangedQuery<T>(GetEntityQuery);
     }
 
     /// <summary>
-    /// Base class for implementing Singleton Blob Loader Job Component Systems that react
-    /// to Blob Singletons being created or changed.
-    /// Used to avoid having the user write as much Boilerplate code.
+    /// Base class for implementing Job Component Systems that react to Blob Singletons being created or changed.
+    /// Used to avoid having the user write as much boilerplate code.
     /// </summary>
-    /// <typeparam name="T"></typeparam>
-    public abstract class SingletonBlobLoadedJobComponentSystem<T> : SingletonLoadedJobComponentSystem<BlobRefData<T>>
+    /// <typeparam name="T">Asset Blob struct type.</typeparam>
+    public abstract class SingletonBlobChangedJobComponentSystem<T> : SingletonChangedJobComponentSystem<BlobRefData<T>>
         where T : struct { }
+
+    /// <summary>
+    /// Base class for implementing Component Systems that react to a conversion attempt that didn't succeed.
+    /// Used to avoid having the user write as much boilerplate code.
+    /// </summary>
+    /// <typeparam name="T">Singleton Component Data type.</typeparam>
+    public abstract class SingletonUnchangedComponentSystem<T> : ComponentSystem
+        where T : struct, IComponentData
+    {
+        protected EntityQuery UnchangedQuery;
+
+        protected override void OnCreate() => UnchangedQuery = this.SetupUnChangedQuery<T>(GetEntityQuery);
+    }
+
+    /// <summary>
+    /// Base class for implementing Job Component Systems that react to a conversion attempt that didn't succeed.
+    /// Used to avoid having the user write as much boilerplate code.
+    /// </summary>
+    /// <typeparam name="T">Singleton Component Data type.</typeparam>
+    public abstract class SingletonUnchangedJobComponentSystem<T> : JobComponentSystem
+        where T : struct, IComponentData
+    {
+        protected EntityQuery UnchangedQuery;
+
+        protected override void OnCreate() => UnchangedQuery = this.SetupUnChangedQuery<T>(GetEntityQuery);
+    }
+
+    /// <summary>
+    /// /// Base class for implementing Component Systems that react to a blob conversion attempt that didn't succeed.
+    /// Used to avoid having the user write as much boilerplate code.
+    /// </summary>
+    /// <typeparam name="T">Asset Blob struct type.</typeparam>
+    public abstract class SingletonBlobUnchangedComponentSystem<T> : SingletonUnchangedComponentSystem<BlobRefData<T>>
+        where T : struct { }
+
+    /// <summary>
+    /// /// Base class for implementing Job Component Systems that react to a blob conversion attempt that didn't succeed.
+    /// Used to avoid having the user write as much boilerplate code.
+    /// </summary>
+    /// <typeparam name="T">Asset Blob struct type.</typeparam>
+    public abstract class
+        SingletonBlobUnchangedJobComponentSystem<T> : SingletonUnchangedJobComponentSystem<BlobRefData<T>>
+        where T : struct { }
+
+    internal static class SingletonSystemEx
+    {
+        public delegate EntityQuery GetQuery(params ComponentType[] types);
+
+        private static EntityQuery SetupQuery<T>(
+            ComponentSystemBase system,
+            GetQuery getQuery,
+            params ComponentType[] types)
+            where T : struct, IComponentData
+        {
+            EntityQuery setQuery = getQuery(types);
+            system.RequireForUpdate(setQuery);
+            system.RequireSingletonForUpdate<T>();
+
+            return setQuery;
+        }
+
+        public static EntityQuery SetupChangedQuery<T>(this ComponentSystemBase system, GetQuery getQuery)
+            where T : struct, IComponentData
+        {
+            return SetupQuery<T>(
+                system,
+                getQuery,
+                ComponentType.ReadOnly<SingletonConverter<T>>(),
+                ComponentType.ReadOnly<SingletonConverted>(),
+                ComponentType.ReadOnly<SingletonChanged>());
+        }
+
+        public static EntityQuery SetupUnChangedQuery<T>(this ComponentSystemBase system, GetQuery getQuery)
+            where T : struct, IComponentData
+        {
+            return SetupQuery<T>(
+                system,
+                getQuery,
+                ComponentType.ReadOnly<SingletonConverter<T>>(),
+                ComponentType.ReadOnly<SingletonConverted>(),
+                ComponentType.ReadOnly<SingletonUnchanged>(),
+                ComponentType.Exclude<SingletonChanged>());
+        }
+    }
 }

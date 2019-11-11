@@ -16,6 +16,6 @@ namespace Hydrogen.Entities.Tests
         private BlobAssetReference<Locales> DoConvert(
             LocalesDefinition definition,
             ScriptableObjectConversionSystem conversionSystem) =>
-            SingletonConversionTestFixture.CreateLocaleData(definition.AvailableLocales);
+            SingletonConversionTestFixture.CreateLocaleData(definition.name, definition.AvailableLocales);
     }
 }
