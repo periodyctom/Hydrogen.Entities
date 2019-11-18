@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.2.0-preview.3] - 2019-11-18
+- Added 3 working samples based on user feedback.
+- Added more base classes to reduce boilerplate for common system patterns.
+- Eliminated need to override a copy function for changing out Blob Asset Singletons.
+
 ## [0.2.0-preview.2] - 2019-11-05
 - Fixed Hydrogen.Entities and Hydrogen.Entities.Hybrid asmdefs not being auto-referenced for projects not using asmdefs.
 - Added Basic Converter Samples.
