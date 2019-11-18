@@ -4,7 +4,7 @@ This sample demonstrates simple usage of basic singleton converters.
 It also shows demonstrates how the DontReplace flag works.
 
 ## The Sample Scenes
-The Scenes are preset to demonstrate the following features, ensure they are added to your build settings to test them properly!
+> The Scenes are preset to demonstrate the following features, ensure they are added to your build settings to test them properly!
 - SimpleConverters is the main demo scene, and is setup with examples of all authoring component types.
     - The SampleSceneLoader will also load other example scenes to demonstrate use of the DontReplace flag, and loading ECS subscene data.
 - DontReplaceConverters is a scene setup to demonstrate the DontReplace flag on the Authoring Components.

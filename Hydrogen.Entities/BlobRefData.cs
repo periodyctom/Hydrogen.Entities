@@ -36,5 +36,8 @@ namespace Hydrogen.Entities
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get => Value.IsCreated;
         }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static implicit operator BlobRefData<T>(BlobAssetReference<T> value) => new BlobRefData<T>(value);
     }
 }

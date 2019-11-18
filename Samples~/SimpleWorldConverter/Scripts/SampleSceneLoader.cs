@@ -1,12 +1,6 @@
 ﻿using System.Collections;
-using System.Linq;
 using UnityEngine;
 using UnityEngine.SceneManagement;
-#if UNITY_EDITOR
-using System;
-using UnityEditor;
-using UnityEditor.SceneManagement;
-#endif
 
 namespace Hydrogen.Entities
 {

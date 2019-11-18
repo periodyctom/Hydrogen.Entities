@@ -1,0 +1,22 @@
+{
+  "Attacks": [
+    {
+      "Name": "Burning Hands",
+      "Power": 101,
+      "Speed": 4.0,
+      "Debuffs": 1
+    },
+    {
+      "Name": "Prismatic Beam",
+      "Power": 12,
+      "Speed": 32.0,
+      "Debuffs": 255
+    },
+    {
+      "Name": "Poison Rain Vornado",
+      "Power": 42,
+      "Speed": 3.14,
+      "Debuffs": 50
+    }
+  ]
+}
