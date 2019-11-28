@@ -69,7 +69,7 @@ namespace Hydrogen.Entities
                 BlobRefData<IniFile> blobRef = configReference;
                 SingletonConverter<BlobRefData<IniFile>> converter = blobRef;
 
-                EntityManager entityManager = World.Active.EntityManager;
+                EntityManager entityManager = World.DefaultGameObjectInjectionWorld.EntityManager;
                 Entity entity = entityManager.CreateEntity(typeof(SingletonConverter<BlobRefData<IniFile>>));
                 entityManager.SetComponentData(entity, converter);
             }

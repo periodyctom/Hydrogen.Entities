@@ -10,7 +10,7 @@ It also shows demonstrates how the DontReplace flag works.
 - DontReplaceConverters is a scene setup to demonstrate the DontReplace flag on the Authoring Components.
     - If you open it on its own and click play, you should see the data load. If you load it after the singletons are set, those authoring components won't have their data set.
 - SimpleSubSceneLoader is setup to load the SimpleSubScene that contains prepared converter data.
-    - You will need to open SimpleSubSceneLoader and Rebuild the Entity cache via the SubScene component on the SimpleSubScene GameObject in order for the subscene to load correctly.
+    - You will need to open SimpleSubSceneLoader to trigger a live-link re-import of the Entity subscene cache.
 
 # Implementing a Simple IComponentData Singleton
 The simplest singleton component type is just a normal IComponentData struct used with the singleton API.

@@ -221,7 +221,7 @@ namespace Hydrogen.Entities.Tests
 
         private void AssertPrefabCollection(EntityQuery query, int expectedCount, bool expectNoPrefabCollectionRef = false)
         {
-            Assert.IsTrue(query.CalculateEntityCount() == expectedCount);
+            Assert.IsTrue(query.CalculateEntityCountWithoutFiltering() == expectedCount);
             NativeArray<Entity> entities = query.ToEntityArray(Allocator.TempJob);
 
             try
@@ -506,20 +506,24 @@ namespace Hydrogen.Entities.Tests
             
             GameObjectConversionUtility.ConvertGameObjectHierarchy(instance.gameObject, World);
 
-            ComponentType prefabRefTypeRO = ComponentType.ReadOnly<BlobRefData<PrefabCollectionBlob>>();
+            ComponentType refTypeRO = ComponentType.ReadOnly<BlobRefData<PrefabCollectionBlob>>();
+            ComponentType excludeRefType = ComponentType.Exclude<BlobRefData<PrefabCollectionBlob>>();
+            ComponentType prefabType = ComponentType.ReadOnly<Prefab>(); 
             
-            EntityQuery liveQuery = m_Manager.CreateEntityQuery(prefabRefTypeRO);
-            EntityQuery prefabQuery = m_Manager.CreateEntityQuery(prefabRefTypeRO, ComponentType.ReadOnly<Prefab>());
+            EntityQuery liveQuery = m_Manager.CreateEntityQuery(refTypeRO);
+            EntityQuery blobPrefabQuery = m_Manager.CreateEntityQuery(refTypeRO, prefabType);
+            EntityQuery leafPrefabQuery = m_Manager.CreateEntityQuery(excludeRefType, prefabType);
             
             try
             {
                 AssertPrefabCollection(liveQuery, 1);
-                AssertPrefabCollection(prefabQuery, 4);
+                AssertPrefabCollection(blobPrefabQuery, 2);
+                Assert.IsTrue(leafPrefabQuery.CalculateEntityCountWithoutFiltering() == 4);
             }
             finally
             {
                 liveQuery.Dispose();
-                prefabQuery.Dispose();
+                blobPrefabQuery.Dispose();
             }
         }
     }

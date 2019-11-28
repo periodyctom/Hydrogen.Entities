@@ -17,7 +17,7 @@ namespace Hydrogen.Entities.Tests
         {
             var config = GetSingleton<TimeConfig>();
 
-            Time.fixedDeltaTime = config.FixedDeltaTime;
+            UnityEngine.Time.fixedDeltaTime = config.FixedDeltaTime;
             Application.targetFrameRate = (int) config.AppTargetFrameRate;
 
             Debug.Log("Updated Time Config!");

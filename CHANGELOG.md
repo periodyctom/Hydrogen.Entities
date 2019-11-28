@@ -1,5 +1,9 @@
 # Changelog
 
+## [0.2.1-preview.0] - 2019-11-27
+- Fixed issues with Entities 0.2.0 compatibility
+- Updated tests to fix issues with bugs being introduced and fixed in the API.
+
 ## [0.2.0-preview.3] - 2019-11-18
 - Added 3 working samples based on user feedback.
 - Added more base classes to reduce boilerplate for common system patterns.
