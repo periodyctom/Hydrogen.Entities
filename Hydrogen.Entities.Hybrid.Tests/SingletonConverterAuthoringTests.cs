@@ -22,7 +22,7 @@ namespace Hydrogen.Entities.Tests
                 "TimeConfigAuthoring",
                 expected);
 
-            Entity convertedEntity = ConvertGameObjectHierarchy(authoring.gameObject, World);
+            Entity convertedEntity = ConvertGameObjectHierarchy(authoring.gameObject, MakeDefaultSettings());
 
             AssertTimeConfigAuthoring(convertedEntity, expected);
         }
@@ -59,7 +59,7 @@ namespace Hydrogen.Entities.Tests
             GameObject prefab = TestUtilities.LoadPrefab("TimeConfigAuthoring");
             TimeConfig expected = prefab.GetComponent<TimeConfigAuthoring>().Source;
 
-            Entity prefabEntity = ConvertGameObjectHierarchy(prefab, World);
+            Entity prefabEntity = ConvertGameObjectHierarchy(prefab, MakeDefaultSettings());
             Entity converterEntity = m_Manager.Instantiate(prefabEntity);
 
             AssertTimeConfigAuthoring(converterEntity, expected);
@@ -72,7 +72,7 @@ namespace Hydrogen.Entities.Tests
 
             LocalesDefinition expected = prefab.GetComponent<LocalesInterfaceAuthoring>().Source;
 
-            Entity interfacePrefabEntity = ConvertGameObjectHierarchy(prefab, World);
+            Entity interfacePrefabEntity = ConvertGameObjectHierarchy(prefab, MakeDefaultSettings());
             Entity interfaceInstance = m_Manager.Instantiate(interfacePrefabEntity);
 
             Assert.IsTrue(m_Manager.HasComponent<LocalesConverter>(interfaceInstance));
@@ -89,7 +89,7 @@ namespace Hydrogen.Entities.Tests
             prefab = TestUtilities.LoadPrefab("LocalesCustomAuthoring");
             expected = prefab.GetComponent<LocalesCustomAuthoring>().Source;
 
-            Entity customPrefabEntity = ConvertGameObjectHierarchy(prefab, World);
+            Entity customPrefabEntity = ConvertGameObjectHierarchy(prefab, MakeDefaultSettings());
 
             World.Update();
 

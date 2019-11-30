@@ -18,6 +18,13 @@ namespace Hydrogen.Entities.Tests
 
         protected static readonly Action<BlobRefData<Locales>, LocalesDefinition> CachedAssertMatchesLocales =
             AssertMatchesLocales;
+
+        protected GameObjectConversionSettings MakeDefaultSettings() =>
+            new GameObjectConversionSettings
+            {
+                DestinationWorld = World,
+                ConversionFlags = GameObjectConversionUtility.ConversionFlags.AssignName
+            };
         
         private static void SetDataAuthoring<T0, T1>(T0 authoring, T1 src, bool dontReplace)
             where T0 : SingletonConvertDataAuthoring<T1>
@@ -99,7 +106,7 @@ namespace Hydrogen.Entities.Tests
             {
                 authoring = createAndAdd(name, expected, dontReplace);
 
-                Entity entity = GameObjectConversionUtility.ConvertGameObjectHierarchy(authoring.gameObject, World);
+                Entity entity = GameObjectConversionUtility.ConvertGameObjectHierarchy(authoring.gameObject, MakeDefaultSettings());
 
                 Assert.IsTrue(m_Manager.HasComponent<SingletonConverter<BlobRefData<T1>>>(entity));
 

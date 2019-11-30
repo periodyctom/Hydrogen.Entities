@@ -18,7 +18,14 @@ namespace Hydrogen.Entities.Tests
         private const string kFooText = "Lorem Ipsum";
         private static readonly int[] sm_integers = {0, 1, 2, 3};
         private static readonly BazData sm_testBaz = new BazData(1,2,3,4);
-        
+
+        private GameObjectConversionSettings MakeDefaultSettings() =>
+            new GameObjectConversionSettings()
+            {
+                DestinationWorld = World,
+                ConversionFlags = GameObjectConversionUtility.ConversionFlags.AssignName
+            };
+
         private struct TestBlob01
         {
             public BlobString Name;
@@ -471,7 +478,7 @@ namespace Hydrogen.Entities.Tests
                 throw;
             }
             
-            GameObjectConversionUtility.ConvertGameObjectHierarchy(instance.gameObject, World);
+            GameObjectConversionUtility.ConvertGameObjectHierarchy(instance.gameObject, MakeDefaultSettings());
 
             EntityQuery query = m_Manager.CreateEntityQuery(ComponentType.ReadOnly<BlobRefData<PrefabCollectionBlob>>());
             
@@ -504,7 +511,7 @@ namespace Hydrogen.Entities.Tests
                 throw;
             }
             
-            GameObjectConversionUtility.ConvertGameObjectHierarchy(instance.gameObject, World);
+            GameObjectConversionUtility.ConvertGameObjectHierarchy(instance.gameObject, MakeDefaultSettings());
 
             ComponentType refTypeRO = ComponentType.ReadOnly<BlobRefData<PrefabCollectionBlob>>();
             ComponentType excludeRefType = ComponentType.Exclude<BlobRefData<PrefabCollectionBlob>>();

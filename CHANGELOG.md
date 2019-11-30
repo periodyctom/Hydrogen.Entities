@@ -1,5 +1,8 @@
 # Changelog
 
+## [0.2.1-preview.1] - 2019-11-30
+- Fixed Warnings with using manual GO conversion in tests due to API changes.
+
 ## [0.2.1-preview.0] - 2019-11-27
 - Fixed issues with Entities 0.2.0 compatibility
 - Updated tests to fix issues with bugs being introduced and fixed in the API.
