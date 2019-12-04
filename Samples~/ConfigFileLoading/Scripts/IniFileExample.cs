@@ -76,11 +76,8 @@ namespace Hydrogen.Entities
         }
     }
 
-    [UpdateInGroup(typeof(InitializationSystemGroup))]
     public sealed class IniFileConvertSystem : SingletonBlobConvertSystem<IniFile> { }
 
-    [UpdateInGroup(typeof(InitializationSystemGroup))]
-    [UpdateAfter(typeof(IniFileConvertSystem))]
     public sealed class IniFileChangedSystem : SingletonBlobChangedComponentSystem<IniFile>
     {
         protected override void OnUpdate()

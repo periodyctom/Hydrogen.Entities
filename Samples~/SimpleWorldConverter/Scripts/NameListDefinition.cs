@@ -60,9 +60,7 @@ namespace Hydrogen.Entities
     }
 
     public sealed class NameListConvertSystem : SingletonBlobConvertSystem<NameList> { }
-
-    [UpdateInGroup(typeof(InitializationSystemGroup))]
-    [UpdateAfter(typeof(NameListConvertSystem))]
+    
     public sealed class NameListChangedSystem : SingletonBlobChangedComponentSystem<NameList>
     {
         private readonly StringBuilder m_stringBuilder = new StringBuilder(1024);

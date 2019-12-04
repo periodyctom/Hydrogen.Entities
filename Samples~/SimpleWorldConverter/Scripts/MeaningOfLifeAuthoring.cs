@@ -18,9 +18,7 @@ namespace Hydrogen.Entities
     }
 
     public sealed class MeaningOfLifeConvertSystem : SingletonConvertSystem<MeaningOfLifeData> {}
-
-    [UpdateInGroup(typeof(InitializationSystemGroup))]
-    [UpdateAfter(typeof(MeaningOfLifeConvertSystem))]
+    
     public sealed class MeaningOfLifeChangedSystem : SingletonChangedComponentSystem<MeaningOfLifeData>
     {
         protected override void OnUpdate()

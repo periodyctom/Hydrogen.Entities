@@ -49,9 +49,7 @@ namespace Hydrogen.Entities
     }
     
     public sealed class FooBarBazConvertSystem : SingletonBlobConvertSystem<FooBarBaz> {}
-
-    [UpdateInGroup(typeof(InitializationSystemGroup))]
-    [UpdateAfter(typeof(FooBarBazConvertSystem))]
+    
     public sealed class FooBarBazChangedSystem : SingletonBlobChangedComponentSystem<FooBarBaz>
     {
         private readonly StringBuilder m_stringBuilder = new StringBuilder(1024);

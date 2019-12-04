@@ -29,12 +29,9 @@ namespace Hydrogen.Entities
             authorGo.AddComponent<ConvertToEntity>();
         }
     }
-
-    [UpdateInGroup(typeof(InitializationSystemGroup))]
+    
     public sealed class DatabaseConvertSystem : SingletonBlobConvertSystem<Database> { }
-
-    [UpdateInGroup(typeof(InitializationSystemGroup))]
-    [UpdateAfter(typeof(DatabaseConvertSystem))]
+    
     public sealed class DatabaseChangedSystem : SingletonBlobChangedComponentSystem<Database>
     {
         protected override void OnUpdate()

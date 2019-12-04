@@ -1,7 +1,8 @@
 using Unity.Mathematics;
 using UnityEngine;
 
-namespace Hydrogen.Entities {
+namespace Hydrogen.Entities 
+{
     [CreateAssetMenu(fileName = "FooBarBaz", menuName = "Samples/FooBarBaz Definition", order = 0)]
     public sealed class FooBarBazDefinition : ScriptableObject
     {

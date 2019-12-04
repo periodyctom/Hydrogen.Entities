@@ -1,6 +1,6 @@
 {
   "name": "com.periodyc.hydrogen.entities",
-  "version": "0.2.2-preview.0",
+  "version": "0.2.2-preview.1",
   "displayName": "Hydrogen Entities",  "description": "A collection of helpers for working with Unity's ECS framework.",
   "unity": "2019.3",
   "dependencies": {

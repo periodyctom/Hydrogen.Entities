@@ -1,5 +1,8 @@
 # Changelog
 
+## [0.2.2-preview.1] - 2019-11-04
+- Removed unnecessary system ordering attributes from sample systems, thanks to the system group additions.
+
 ## [0.2.2-preview.0] - 2019-11-03
 - Added SingletonConvertGroup and SingletonPostConvertGroup to simplify managing order for conversion systems.
 - SingletonConvertSystem<T> now all by default run in SingletonConvertGroup
