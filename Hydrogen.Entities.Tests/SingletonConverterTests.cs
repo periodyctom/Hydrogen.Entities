@@ -5,7 +5,6 @@ using Unity.Entities;
 using UnityEngine;
 using UnityEngine.TestTools;
 
-
 namespace Hydrogen.Entities.Tests
 {
     using TimeConfigConverter = SingletonConverter<TimeConfig>;

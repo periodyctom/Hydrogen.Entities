@@ -1,7 +1,9 @@
 # **ScriptableObjectConversionSystem**
 
-Similar to and piggybacking on the [GameObject](https://docs.unity3d.com/ScriptReference/GameObject.html) conversion pipeline. The ScriptableObjectConversionSystems has functions for creating Blob assets and [BlobAssetReference&lt;T&gt;](https://docs.unity3d.com/Packages/com.unity.entities@0.1/api/Unity.Entities.BlobAssetReference-1.html) to them from [ScriptableObjects](https://docs.unity3d.com/ScriptReference/ScriptableObject.html).
-The conversion system caches created BlobAssetReferences&lt;T&gt; so given the same inputs, you should get the same result. This allows a converted SO to be referenced in more than one place.
+Similar to and piggybacking on the [GameObject](https://docs.unity3d.com/ScriptReference/GameObject.html) conversion pipeline. 
+The ScriptableObjectConversionSystems has functions for creating Blob assets and [BlobAssetReference&lt;T&gt;](https://docs.unity3d.com/Packages/com.unity.entities@0.3/api/Unity.Entities.BlobAssetReference-1.html) to them from [ScriptableObjects](https://docs.unity3d.com/ScriptReference/ScriptableObject.html).
+The conversion system caches created BlobAssetReferences&lt;T&gt; so given the same inputs, you should get the same result. 
+This allows a converted SO to be referenced in more than one place.
 
 The conversion flow is also given access to the GameObjectConversionSystem used in converting GOs, so you can create SO conversions that reference converted prefabs, given the originating prefab references!
 

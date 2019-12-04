@@ -107,17 +107,27 @@ namespace Hydrogen.Entities.Tests
             World world = m_Manager.World;
 
             var initGroup = world.GetOrCreateSystem<InitializationSystemGroup>();
-            initGroup.AddSystemToUpdateList(world.CreateSystem<LocalesConvertSystem>());
-            initGroup.AddSystemToUpdateList(world.CreateSystem<LocalesChangedSystem>());
-            initGroup.AddSystemToUpdateList(world.CreateSystem<LocalesChangedJobSystem>());
-            initGroup.AddSystemToUpdateList(world.CreateSystem<LocalesUnchangedSystem>());
-            initGroup.AddSystemToUpdateList(world.CreateSystem<LocalesUnchangedJobSystem>());
-            initGroup.AddSystemToUpdateList(world.CreateSystem<TimeConfigConvertSystem>());
-            initGroup.AddSystemToUpdateList(world.CreateSystem<TimeConfigChangedSystem>());
-            initGroup.AddSystemToUpdateList(world.CreateSystem<TimeConfigChangedJobSystem>());
-            initGroup.AddSystemToUpdateList(world.CreateSystem<TimeConfigUnchangedSystem>());
-            initGroup.AddSystemToUpdateList(world.CreateSystem<TimeConfigUnchangedJobSystem>());
+            var convertGroup = world.GetOrCreateSystem<SingletonConvertGroup>();
+            var postConvertGroup = world.GetOrCreateSystem<SingletonPostConvertGroup>();
+            
+            initGroup.AddSystemToUpdateList(convertGroup);
+            initGroup.AddSystemToUpdateList(postConvertGroup);
+            
+            convertGroup.AddSystemToUpdateList(world.CreateSystem<LocalesConvertSystem>());
+            convertGroup.AddSystemToUpdateList(world.CreateSystem<TimeConfigConvertSystem>());
+            
+            postConvertGroup.AddSystemToUpdateList(world.CreateSystem<LocalesChangedSystem>());
+            postConvertGroup.AddSystemToUpdateList(world.CreateSystem<LocalesChangedJobSystem>());
+            postConvertGroup.AddSystemToUpdateList(world.CreateSystem<LocalesUnchangedSystem>());
+            postConvertGroup.AddSystemToUpdateList(world.CreateSystem<LocalesUnchangedJobSystem>());
+            postConvertGroup.AddSystemToUpdateList(world.CreateSystem<TimeConfigChangedSystem>());
+            postConvertGroup.AddSystemToUpdateList(world.CreateSystem<TimeConfigChangedJobSystem>());
+            postConvertGroup.AddSystemToUpdateList(world.CreateSystem<TimeConfigUnchangedSystem>());
+            postConvertGroup.AddSystemToUpdateList(world.CreateSystem<TimeConfigUnchangedJobSystem>());
+            
             initGroup.SortSystemUpdateList();
+            convertGroup.SortSystemUpdateList();
+            postConvertGroup.SortSystemUpdateList();
         }
 
         [TearDown]

@@ -1,7 +1,6 @@
 using UnityEditor;
 using UnityEngine;
 
-
 namespace Hydrogen.Entities.Tests
 {
     internal static class TestUtilities

@@ -9,8 +9,6 @@ namespace Hydrogen.Entities.Tests
 {
     public sealed class TimeConfigConvertSystem : SingletonConvertSystem<TimeConfig> { }
 
-    [UpdateInGroup(typeof(InitializationSystemGroup))]
-    [UpdateAfter(typeof(TimeConfigConvertSystem))]
     public sealed class TimeConfigChangedSystem : SingletonChangedComponentSystem<TimeConfig>
     {
         protected override void OnUpdate()
@@ -24,23 +22,20 @@ namespace Hydrogen.Entities.Tests
         }
     }
 
-    [UpdateInGroup(typeof(InitializationSystemGroup))]
-    [UpdateAfter(typeof(TimeConfigConvertSystem))]
     public sealed class TimeConfigUnchangedSystem : SingletonUnchangedComponentSystem<TimeConfig>
     {
         protected override void OnUpdate()
         {
-            Entities.With(UnchangedQuery).ForEach(
-                (Entity e, ref SingletonConverter<TimeConfig> d0) =>
-                {
-                    Debug.Log(
-                        $"Wasn't set {e.ToString()}: {d0.Value.AppTargetFrameRate:D}|{d0.DontReplace.ToString()}");
-                });
+            Entities.With(UnchangedQuery)
+                    .ForEach(
+                         (Entity e, ref SingletonConverter<TimeConfig> d0) =>
+                         {
+                             Debug.Log(
+                                 $"Wasn't set {e.ToString()}: {d0.Value.AppTargetFrameRate:D}|{d0.DontReplace.ToString()}");
+                         });
         }
     }
 
-    [UpdateInGroup(typeof(InitializationSystemGroup))]
-    [UpdateAfter(typeof(TimeConfigConvertSystem))]
     public sealed class TimeConfigUnchangedJobSystem : SingletonUnchangedJobComponentSystem<TimeConfig>
     {
         private struct Entry
@@ -48,21 +43,23 @@ namespace Hydrogen.Entities.Tests
             public Entity Entity;
             public SingletonConverter<TimeConfig> Converter;
         }
-        
+
         [BurstCompile]
         private struct CollectJob : IJobForEachWithEntity_EC<SingletonConverter<TimeConfig>>
         {
             public NativeList<Entry> Entries;
+
             public void Execute(Entity entity, int index, [ReadOnly] ref SingletonConverter<TimeConfig> c0)
             {
-                Entries.Add(new Entry
-                {
-                    Entity = entity,
-                    Converter = c0,
-                });
+                Entries.Add(
+                    new Entry
+                    {
+                        Entity = entity,
+                        Converter = c0,
+                    });
             }
         }
-        
+
         private struct LogJob : IJob
         {
             [ReadOnly] public NativeList<Entry> Entries;
@@ -78,7 +75,7 @@ namespace Hydrogen.Entities.Tests
                 }
             }
         }
-        
+
         protected override JobHandle OnUpdate(JobHandle inputDeps)
         {
             var entries = new NativeList<Entry>(
@@ -101,8 +98,6 @@ namespace Hydrogen.Entities.Tests
         }
     }
 
-    [UpdateInGroup(typeof(InitializationSystemGroup))]
-    [UpdateAfter(typeof(TimeConfigConvertSystem))]
     public sealed class TimeConfigChangedJobSystem : SingletonChangedJobComponentSystem<TimeConfig>
     {
         protected override JobHandle OnUpdate(JobHandle inputDeps)
@@ -135,8 +130,6 @@ namespace Hydrogen.Entities.Tests
 
     public sealed class LocalesConvertSystem : SingletonBlobConvertSystem<Locales> { }
 
-    [UpdateInGroup(typeof(InitializationSystemGroup))]
-    [UpdateAfter(typeof(LocalesConvertSystem))]
     public sealed class LocalesChangedSystem : SingletonBlobChangedComponentSystem<Locales>
     {
         private readonly StringBuilder m_localeListBuilder = new StringBuilder(1024);
@@ -165,8 +158,6 @@ namespace Hydrogen.Entities.Tests
         }
     }
 
-    [UpdateInGroup(typeof(InitializationSystemGroup))]
-    [UpdateAfter(typeof(LocalesConvertSystem))]
     public sealed class LocalesChangedJobSystem : SingletonBlobChangedJobComponentSystem<Locales>
     {
         private static readonly StringBuilder sm_builder = new StringBuilder(1024);
@@ -182,7 +173,7 @@ namespace Hydrogen.Entities.Tests
 
             return inputDeps;
         }
-        
+
         private struct CollectLocales : IJob
         {
             [ReadOnly] public BlobRefData<Locales> RefData;
@@ -190,10 +181,11 @@ namespace Hydrogen.Entities.Tests
             public void Execute()
             {
                 ref Locales locales = ref RefData.Resolve;
-                ref BlobString name = ref locales.Name; 
+                ref BlobString name = ref locales.Name;
                 sm_builder.AppendLine(name.ToString());
-                
+
                 int len = locales.Available.Length;
+
                 for (int i = 0; i < len; i++)
                 {
                     ref BlobString str = ref locales.Available[i];
@@ -201,7 +193,7 @@ namespace Hydrogen.Entities.Tests
                 }
             }
         }
-        
+
         private struct LogLocales : IJob
         {
             public void Execute()
@@ -212,14 +204,13 @@ namespace Hydrogen.Entities.Tests
         }
     }
 
-    [UpdateInGroup(typeof(InitializationSystemGroup))]
-    [UpdateAfter(typeof(LocalesConvertSystem))]
     public sealed class LocalesUnchangedSystem : SingletonBlobUnchangedComponentSystem<Locales>
     {
         private static readonly StringBuilder sm_stringBuilder = new StringBuilder(1024);
+
         private static readonly EntityQueryBuilder.F_ED<SingletonConverter<BlobRefData<Locales>>> sm_logUnchanged =
             LogUnchanged;
-        
+
         protected override void OnUpdate()
         {
             Entities.With(UnchangedQuery).ForEach(sm_logUnchanged);
@@ -242,8 +233,6 @@ namespace Hydrogen.Entities.Tests
         }
     }
 
-    [UpdateInGroup(typeof(InitializationSystemGroup))]
-    [UpdateAfter(typeof(LocalesConvertSystem))]
     public sealed class LocalesUnchangedJobSystem : SingletonBlobUnchangedJobComponentSystem<Locales>
     {
         private static readonly StringBuilder sm_stringBuilder = new StringBuilder(1024);
@@ -257,7 +246,7 @@ namespace Hydrogen.Entities.Tests
 
                 sm_stringBuilder.AppendLine("Unchanged Locales In Job");
                 sm_stringBuilder.AppendLine(name.ToString());
-                
+
                 int len = locales.Available.Length;
 
                 for (int i = 0; i < len; i++)
@@ -267,7 +256,7 @@ namespace Hydrogen.Entities.Tests
                 }
             }
         }
-        
+
         private struct Log : IJob
         {
             public void Execute()

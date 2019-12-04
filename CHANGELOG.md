@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.2.2-preview.0] - 2019-11-03
+- Added SingletonConvertGroup and SingletonPostConvertGroup to simplify managing order for conversion systems.
+- SingletonConvertSystem<T> now all by default run in SingletonConvertGroup
+- All SingletonChanged* variant systems now run in SingletonPostConvertGroup
+- Bumped required Entities version to 0.3.0-preview.0, since it fixes several ConvertToEntity issues. 
+
 ## [0.2.1-preview.1] - 2019-11-30
 - Fixed Warnings with using manual GO conversion in tests due to API changes.
 

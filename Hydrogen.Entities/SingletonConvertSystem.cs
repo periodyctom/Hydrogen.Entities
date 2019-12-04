@@ -1,17 +1,34 @@
 using Unity.Collections;
 using Unity.Entities;
 using Unity.Entities.Serialization;
+using Unity.Scenes;
 using UnityEngine;
 using UnityEngine.Assertions;
 
 namespace Hydrogen.Entities
 {
     /// <summary>
+    /// The system group that all SingletonConvertSystems should run in.
+    /// </summary>
+    [UpdateInGroup(typeof(InitializationSystemGroup))]
+    [UpdateAfter(typeof(SceneSystemGroup))] 
+    // TODO: Find a better way of handling this where we don't rely on any hybrid entity assemblies.
+    // SceneSystemGroup lives in Unity.Scenes.Hybrid currently.
+    public sealed class SingletonConvertGroup : ComponentSystemGroup {}
+    
+    /// <summary>
+    /// The system group that systems reactive to Singleton Conversion should run in.
+    /// </summary>
+    [UpdateInGroup(typeof(InitializationSystemGroup))]
+    [UpdateAfter(typeof(SingletonConvertGroup))]
+    public sealed class SingletonPostConvertGroup : ComponentSystemGroup {}
+    
+    /// <summary>
     /// A generic system for handling the actual transformation from
     /// <see cref="SingletonConverter{T}"/> to a Singleton of <typeparamref name="T"/>
     /// </summary>
     /// <typeparam name="T">Singleton Component Data type.</typeparam>
-    [UpdateInGroup(typeof(InitializationSystemGroup))]
+    [UpdateInGroup(typeof(SingletonConvertGroup))]
     public class SingletonConvertSystem<T> : ComponentSystem
         where T : struct, IComponentData
     {
@@ -180,12 +197,13 @@ namespace Hydrogen.Entities
             return new BlobRefData<T>(copy);
         }
     }
-
+    
     /// <summary>
     /// Base class for implementing Component Systems that react to Singletons being created or changed.
     /// Used to avoid having the user write as much boilerplate code.
     /// </summary>
     /// <typeparam name="T">Singleton Component Data type.</typeparam>
+    [UpdateInGroup(typeof(SingletonPostConvertGroup))]
     public abstract class SingletonChangedComponentSystem<T> : ComponentSystem
         where T : struct, IComponentData
     {
@@ -206,6 +224,7 @@ namespace Hydrogen.Entities
     /// Used to avoid having the user write as much boilerplate code.
     /// </summary>
     /// <typeparam name="T">Singleton Component Data type.</typeparam>
+    [UpdateInGroup(typeof(SingletonPostConvertGroup))]
     public abstract class SingletonChangedJobComponentSystem<T> : JobComponentSystem
         where T : struct, IComponentData
     {
@@ -227,6 +246,7 @@ namespace Hydrogen.Entities
     /// Used to avoid having the user write as much boilerplate code.
     /// </summary>
     /// <typeparam name="T">Singleton Component Data type.</typeparam>
+    [UpdateInGroup(typeof(SingletonPostConvertGroup))]
     public abstract class SingletonUnchangedComponentSystem<T> : ComponentSystem
         where T : struct, IComponentData
     {
@@ -240,6 +260,7 @@ namespace Hydrogen.Entities
     /// Used to avoid having the user write as much boilerplate code.
     /// </summary>
     /// <typeparam name="T">Singleton Component Data type.</typeparam>
+    [UpdateInGroup(typeof(SingletonPostConvertGroup))]
     public abstract class SingletonUnchangedJobComponentSystem<T> : JobComponentSystem
         where T : struct, IComponentData
     {
