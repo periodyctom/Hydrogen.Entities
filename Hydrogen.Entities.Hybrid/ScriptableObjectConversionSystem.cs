@@ -176,7 +176,7 @@ namespace Hydrogen.Entities
             if (m_scriptableToBlob.TryAdd(instanceId, data))
                 return data.AsReference<T0>();
 
-            data.AsReference<T0>().Release();
+            data.AsReference<T0>().Dispose();
 
             throw new InvalidOperationException();
         }

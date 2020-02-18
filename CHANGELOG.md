@@ -1,5 +1,8 @@
 # Changelog
 
+## [0.2.2-preview.2] - 2020-02-17
+- Minor fix for an API rename
+
 ## [0.2.2-preview.1] - 2019-11-04
 - Removed unnecessary system ordering attributes from sample systems, thanks to the system group additions.
 
