@@ -7,25 +7,21 @@ using UnityEngine.TestTools;
 
 namespace Hydrogen.Entities.Tests
 {
-    using TimeConfigConverter = SingletonConverter<TimeConfig>;
-    using LocalesRef = BlobRefData<Locales>;
-    using LocalesConverter = SingletonConverter<BlobRefData<Locales>>;
-
     public class SingletonConverterTests : SingletonConversionTestFixture
     {
-        private void AssertSerialConversion<T>(
+        void AssertSerialConversion<T0, T1>(
             SingletonQueries queries,
             EntityArchetype archetype,
-            Action<T, SingletonConverter<T>> assertSame,
-            SingletonConverter<T> initialData,
-            SingletonConverter<T> finalData,
+            Action<T0, T1> assertSame,
+            T1 initialConverter,
+            T0 finalData,
             int startingCount)
-            where T : struct, IComponentData
+            where T0 : struct, IComponentData
+            where T1 : struct, ISingletonConverter<T0>
         {
             Assert.IsNotNull(assertSame);
 
-            SingletonConverter<T> initialConverter = initialData;
-            Entity converterEntity = m_Manager.CreateEntity(archetype);
+            var converterEntity = m_Manager.CreateEntity(archetype);
             m_Manager.SetComponentData(converterEntity, initialConverter);
 
             queries.AssertCounts(1, 0, startingCount);
@@ -34,107 +30,105 @@ namespace Hydrogen.Entities.Tests
 
             queries.AssertCounts(0, 1, 1);
 
-            var singletonData = queries.Singleton.GetSingleton<T>();
-            assertSame(singletonData, finalData);
+            var singletonData = queries.Singleton.GetSingleton<T0>();
+            assertSame(singletonData, new T1 {Singleton = finalData});
 
             World.Update();
 
             queries.AssertCounts(0, 0, 1);
         }
 
-        private void AssertFirstConversion<T>(
+        void AssertFirstConversion<T0, T1>(
             in SingletonQueries queries,
             EntityArchetype archetype,
-            Action<T, SingletonConverter<T>> assertSame,
-            SingletonConverter<T> data)
-            where T : struct, IComponentData
+            Action<T0, T1> assertSame,
+            T1 converter)
+            where T0 : struct, IComponentData
+            where T1 : struct, ISingletonConverter<T0>
         {
-            AssertSerialConversion(
-                queries,
-                archetype,
-                assertSame,
-                data,
-                data,
-                0);
+            AssertSerialConversion(queries, archetype, assertSame, converter, converter.Singleton, 0);
         }
 
-        private void AssertReplaceConversion<T>(
+        void AssertReplaceConversion<T0, T1>(
             in SingletonQueries queries,
             EntityArchetype archetype,
-            Action<T, SingletonConverter<T>> assertSame,
-            SingletonConverter<T> data)
-            where T : struct, IComponentData
+            Action<T0, T1> assertSame,
+            T1 converter)
+            where T0 : struct, IComponentData
+            where T1 : struct, ISingletonConverter<T0>
         {
-            AssertSerialConversion(
-                queries,
-                archetype,
-                assertSame,
-                data,
-                data,
-                1);
+            AssertSerialConversion(queries, archetype, assertSame, converter, converter.Singleton, 1);
         }
 
-        private void AssertDontReplaceConversion<T>(
+        void AssertDontReplaceConversion<T0, T1>(
             SingletonQueries queries,
             EntityArchetype archetype,
-            Action<T, SingletonConverter<T>> assertSame,
-            SingletonConverter<T> ignoredData,
-            SingletonConverter<T> actualData)
-            where T : struct, IComponentData
+            Action<T0, T1> assertSame,
+            T1 ignoredData,
+            T0 actualData)
+            where T0 : struct, IComponentData
+            where T1 : struct, ISingletonConverter<T0>
         {
-            AssertSerialConversion(
-                queries,
-                archetype,
-                assertSame,
-                ignoredData,
-                actualData,
-                1);
+            AssertSerialConversion(queries, archetype, assertSame, ignoredData, actualData, 1);
         }
 
-        private void TestSimpleConversion<T>(
+        void TestSimpleConversion<T0, T1>(
             SingletonQueries queries,
-            Action<T, SingletonConverter<T>> assertSame,
-            T initial,
-            T replace,
-            T dontReplace)
-            where T : struct, IComponentData
+            Action<T0, T1> assertSame,
+            T0 initial,
+            T0 replace,
+            T0 dontReplace)
+            where T0 : struct, IComponentData
+            where T1 : struct, ISingletonConverter<T0>
         {
-            EntityArchetype archetype = m_Manager.CreateArchetype(ComponentType.ReadWrite<SingletonConverter<T>>());
+            var archetype = m_Manager.CreateArchetype(ComponentType.ReadWrite<T1>());
 
             // Check initial set
-            SingletonConverter<T> initConverter = initial;
-            AssertFirstConversion(queries, archetype, assertSame, initConverter);
+            var initialConverter = new T1
+            {
+                Singleton = initial,
+            };
+            
+            AssertFirstConversion(queries, archetype, assertSame, initialConverter);
 
             // Check Replace
-            SingletonConverter<T> replaceConverter = replace;
+            var replaceConverter = new T1
+            {
+                Singleton = replace
+            };
             AssertReplaceConversion(queries, archetype, assertSame, replaceConverter);
 
             // Check Don't Replace
-            var dontReplaceConverter = new SingletonConverter<T>(dontReplace, true);
+            var dontReplaceConverter = new T1
+            {
+                Singleton = dontReplace,
+                DontReplace = true,
+            };
 
             AssertDontReplaceConversion(queries, archetype, assertSame, dontReplaceConverter, replace);
 
             // Check Destroy
-            Entity singletonEntity = queries.Singleton.GetSingletonEntity();
+            var singletonEntity = queries.Singleton.GetSingletonEntity();
             m_Manager.DestroyEntity(singletonEntity);
 
             queries.AssertCounts(0, 0, 0);
         }
 
-        private void TestMultipleConversion<T>(
+        void TestMultipleConversion<T0, T1>(
             SingletonQueries queries,
             EntityArchetype archetype,
-            Action<T, SingletonConverter<T>> assertSame,
-            NativeArray<SingletonConverter<T>> converters,
+            Action<T0, T1> assertSame,
+            NativeArray<T1> converters,
             int expectedFinalIndex)
-            where T : struct, IComponentData
+            where T0 : struct, IComponentData
+            where T1 : struct, ISingletonConverter<T0>
         {
-            int len = converters.Length;
+            var len = converters.Length;
 
-            for (int i = 0; i < len; i++)
+            for (var i = 0; i < len; i++)
             {
-                SingletonConverter<T> converter = converters[i];
-                Entity converterEntity = m_Manager.CreateEntity(archetype);
+                var converter = converters[i];
+                var converterEntity = m_Manager.CreateEntity(archetype);
                 m_Manager.SetComponentData(converterEntity, converter);
             }
 
@@ -142,13 +136,13 @@ namespace Hydrogen.Entities.Tests
 
             LogAssert.Expect(
                 LogType.Warning,
-                $"There are {len.ToString()} singleton conversion candidates for {typeof(T).Name}! Resolving in the order acquired!");
+                $"There are {len.ToString()} singleton conversion candidates for {typeof(T0).Name}! Resolving in the order acquired!");
 
             World.Update();
 
             queries.AssertCounts(0, len, 1);
             
-            var singleton = queries.Singleton.GetSingleton<T>();
+            var singleton = queries.Singleton.GetSingleton<T0>();
             assertSame(singleton, converters[expectedFinalIndex]);
             
             World.Update();
@@ -161,7 +155,7 @@ namespace Hydrogen.Entities.Tests
         [Test]
         public void DataConverter_SetsAndDestroysSingleton_WithSerialConverters()
         {
-            TestSimpleConversion(
+            TestSimpleConversion<TimeConfig, TimeConfigConverter>(
                 TimeConfigQueries,
                 CachedAssertTimeConfigs,
                 new TimeConfig(60, 1.0f / 60.0f),
@@ -172,14 +166,28 @@ namespace Hydrogen.Entities.Tests
         [Test]
         public void DataConverter_SetsSingleton_WithMultipleConverters()
         {
-            EntityArchetype archetype = m_Manager.CreateArchetype(typeof(TimeConfigConverter));
+            var archetype = m_Manager.CreateArchetype(typeof(TimeConfigConverter));
 
             var converters = new NativeArray<TimeConfigConverter>(4, Allocator.Temp)
             {
-                [0] = new TimeConfig(15, 1.0f / 15.0f),
-                [1] = new TimeConfigConverter(new TimeConfig(30, 1.0f / 30.0f), true),
-                [2] = new TimeConfig(60, 1.0f / 60.0f),
-                [3] = new TimeConfigConverter(new TimeConfig(120, 1.0f / 120.0f), true)
+                [0] = new TimeConfigConverter
+                {
+                    Singleton = new TimeConfig(15, 1.0f / 15.0f),
+                },
+                [1] = new TimeConfigConverter
+                {
+                    Singleton = new TimeConfig(30, 1.0f / 30.0f),
+                    DontReplace = true,
+                },
+                [2] = new TimeConfigConverter
+                {
+                    Singleton = new TimeConfig(60, 1.0f / 60.0f),
+                },
+                [3] = new TimeConfigConverter
+                {
+                    Singleton = new TimeConfig(120, 1.0f / 120.0f),
+                    DontReplace = true,
+                },
             };
 
             try
@@ -196,7 +204,7 @@ namespace Hydrogen.Entities.Tests
 
         #region Blob Converter
 
-        private static void TryDispose(LocalesRef refData)
+        static void TryDispose(BlobRefData<Locales> refData)
         {
             if (refData.IsCreated)
                 refData.Value.Dispose();
@@ -205,14 +213,13 @@ namespace Hydrogen.Entities.Tests
         [Test]
         public void BlobConverter_SetsAndDestroysSingleton_WithSerialConverters()
         {
-            
-            LocalesConverter initial = CreateLocaleRefData("initial", "en", "fr", "it", "de", "es");
-            LocalesConverter replace = CreateLocaleRefData("replace", "zh", "ja", "ko");
-            LocalesConverter dontReplace = CreateLocaleRefData("dontReplace", "en-us", "en-gb", "la");
+            var initial = CreateLocaleRefData("initial", "en", "fr", "it", "de", "es");
+            var replace = CreateLocaleRefData("replace", "zh", "ja", "ko");
+            var dontReplace = CreateLocaleRefData("dontReplace", "en-us", "en-gb", "la");
             
             try
             {
-                TestSimpleConversion(LocalesQueries, CachedAssertSupportedLocales, initial, replace, dontReplace);
+                TestSimpleConversion<BlobRefData<Locales>, LocalesConverter>(LocalesQueries, CachedAssertSupportedLocales, initial, replace, dontReplace);
             }
             finally
             {
@@ -225,15 +232,15 @@ namespace Hydrogen.Entities.Tests
         [Test]
         public void BlobConverter_SetsSingleton_WithMultipleConverters()
         {
-            EntityArchetype archetype = m_Manager.CreateArchetype(typeof(LocalesConverter));
+            var archetype = m_Manager.CreateArchetype(typeof(LocalesConverter));
 
             var converters =
                 new NativeArray<LocalesConverter>(4, Allocator.Temp, NativeArrayOptions.UninitializedMemory)
                 {
-                    [0] = new LocalesConverter(CreateLocaleRefData("0","zh", "ja", "ko")),
-                    [1] = new LocalesConverter(CreateLocaleRefData("1","la"), true),
-                    [2] = new LocalesConverter(CreateLocaleRefData("2","en", "fr", "it", "de", "es")),
-                    [3] = new LocalesConverter(CreateLocaleRefData("3","en-us", "en-gb"), true)
+                    [0] = new LocalesConverter{Singleton = CreateLocaleRefData("0", "zh", "ja", "ko")},
+                    [1] = new LocalesConverter{Singleton = CreateLocaleRefData("1", "la"), DontReplace = true},
+                    [2] = new LocalesConverter{Singleton = CreateLocaleRefData("2","en", "fr", "it", "de", "es")},
+                    [3] = new LocalesConverter{Singleton = CreateLocaleRefData("3","en-us", "en-gb"), DontReplace = true},
                 };
 
             try
@@ -242,8 +249,8 @@ namespace Hydrogen.Entities.Tests
             }
             finally
             {
-                for (int i = 0; i < converters.Length; i++)
-                    TryDispose(converters[i].Value);
+                for (var i = 0; i < converters.Length; i++)
+                    TryDispose(converters[i].Singleton);
 
                 converters.Dispose();
             }

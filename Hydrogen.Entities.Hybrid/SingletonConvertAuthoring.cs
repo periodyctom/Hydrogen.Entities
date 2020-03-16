@@ -9,8 +9,9 @@ namespace Hydrogen.Entities
     /// </summary>
     /// <typeparam name="T0">Singleton Component Data type</typeparam>
     [RequiresEntityConversion]
-    public abstract class SingletonConvertAuthoring<T0, T1> : MonoBehaviour, IConvertGameObjectToEntity
+    public abstract class SingletonConvertAuthoring<T0, T1, T2> : MonoBehaviour, IConvertGameObjectToEntity
         where T0 : struct, IComponentData
+        where T2 : struct, ISingletonConverter<T0>
     {
         /// <summary>
         /// Source data for our singleton.
@@ -35,7 +36,7 @@ namespace Hydrogen.Entities
         /// <param name="dstManager">Destination <see cref="EntityManager"/></param>
         /// <param name="conversionSystem">The <see cref="GameObjectConversionSystem"/> for converting any other GameObject parts.</param>
         /// <returns>The <see cref="SingletonConverter{T}"/> component data, which acts as our delivery wrapper for the final singleton component data.</returns>
-        protected abstract SingletonConverter<T0> GetConverter(
+        protected abstract T2 GetConverter(
             Entity entity,
             EntityManager dstManager,
             GameObjectConversionSystem conversionSystem);
@@ -53,9 +54,11 @@ namespace Hydrogen.Entities
     /// <summary>
     /// Implements the simplest conversion of struct singletons.
     /// </summary>
-    /// <typeparam name="T">Component Data that is also serializable in the editor.</typeparam>
-    public abstract class SingletonConvertDataAuthoring<T> : SingletonConvertAuthoring<T, T>
-        where T : struct, IComponentData
+    /// <typeparam name="T0">Component Data that is also serializable in the editor.</typeparam>
+    public abstract class SingletonConvertDataAuthoring<T0, T1> : SingletonConvertAuthoring<T0, T0, T1>
+        where T0 : struct, IComponentData
+        where T1 : struct, ISingletonConverter<T0>
+
     {
         /// <summary>
         /// Implements a direct conversion from <see cref="SingletonConvertAuthoring{T0,T1}.Source"/>
@@ -65,11 +68,18 @@ namespace Hydrogen.Entities
         /// <param name="dstManager"><see cref="EntityManager"/>, not used in this conversion.</param>
         /// <param name="conversionSystem"><see cref="GameObjectConversionSystem"/>, not used in this conversion.</param>
         /// <returns><see cref="SingletonConverter{T}"/> component data to be added to this Entity.</returns>
-        protected sealed override SingletonConverter<T> GetConverter(
+        protected sealed override T1 GetConverter(
             Entity entity,
             EntityManager dstManager,
-            GameObjectConversionSystem conversionSystem) =>
-            new SingletonConverter<T>(Source, DontReplaceIfLoaded);
+            GameObjectConversionSystem conversionSystem)
+
+        {
+            return new T1
+            {
+                Singleton = Source,
+                DontReplace = DontReplaceIfLoaded
+            };
+        }
     }
 
     /// <summary>
@@ -77,9 +87,10 @@ namespace Hydrogen.Entities
     /// </summary>
     /// <typeparam name="T0">Blob Asset struct type.</typeparam>
     /// <typeparam name="T1"><see cref="ScriptableObject"/> type that will be our source.</typeparam>
-    public abstract class SingletonConvertBlobAuthoring<T0, T1> : SingletonConvertAuthoring<BlobRefData<T0>, T1>
+    public abstract class SingletonConvertBlobAuthoring<T0, T1, T2> : SingletonConvertAuthoring<BlobRefData<T0>, T1, T2>
         where T0 : struct
         where T1 : ScriptableObject
+        where T2 : struct, ISingletonConverter<BlobRefData<T0>>
     {
         /// <summary>
         /// Implement this to handle the interaction between this bootstrapper
@@ -97,18 +108,21 @@ namespace Hydrogen.Entities
         /// <param name="dstManager">Destination <see cref="EntityManager"/></param>
         /// <param name="conversionSystem">The <see cref="GameObjectConversionSystem"/> for converting any other GameObject parts.</param>
         /// <returns><see cref="SingletonConverter{BlobRefData{T0}}"/> component data to be added to this Entity.</returns>
-        protected sealed override SingletonConverter<BlobRefData<T0>> GetConverter(
+        protected sealed override T2 GetConverter(
             Entity entity,
             EntityManager dstManager,
             GameObjectConversionSystem conversionSystem)
         {
-            BlobAssetReference<T0> blob = ConvertScriptable(
-                dstManager.World.GetOrCreateSystem<ScriptableObjectConversionSystem>());
+            var blob = ConvertScriptable(dstManager.World.GetOrCreateSystem<ScriptableObjectConversionSystem>());
 
             BlobRefData<T0> blobReferenceData = default;
             blobReferenceData.Value = blob;
 
-            return new SingletonConverter<BlobRefData<T0>>(blobReferenceData, DontReplaceIfLoaded);
+            return new T2
+            {
+                Singleton = blobReferenceData,
+                DontReplace = DontReplaceIfLoaded
+            };
         }
     }
 
@@ -118,9 +132,10 @@ namespace Hydrogen.Entities
     /// </summary>
     /// <typeparam name="T0">The Blob asset struct type.</typeparam>
     /// <typeparam name="T1">ScriptableObject that implements the conversion interface.</typeparam>
-    public abstract class SingletonConvertBlobInterfaceAuthoring<T0, T1> : SingletonConvertBlobAuthoring<T0, T1>
+    public abstract class SingletonConvertBlobInterfaceAuthoring<T0, T1, T2> : SingletonConvertBlobAuthoring<T0, T1, T2>
         where T0 : struct
         where T1 : ScriptableObject, IConvertScriptableObjectToBlob<T0>
+        where T2 : struct, ISingletonConverter<BlobRefData<T0>>
     {
         /// <summary>
         /// Overriden Convert function that handles calling the correct GetBlob function
@@ -138,9 +153,10 @@ namespace Hydrogen.Entities
     /// </summary>
     /// <typeparam name="T0">The Blob asset struct type.</typeparam>
     /// <typeparam name="T1">ScriptableObject that will be converted by the custom function.</typeparam>
-    public abstract class SingletonConvertBlobCustomAuthoring<T0, T1> : SingletonConvertBlobAuthoring<T0, T1>
+    public abstract class SingletonConvertBlobCustomAuthoring<T0, T1, T2> : SingletonConvertBlobAuthoring<T0, T1, T2>
         where T0 : struct
         where T1 : ScriptableObject
+        where T2 : struct, ISingletonConverter<BlobRefData<T0>>
     {
         /// <summary>
         /// Implement this to return a (preferably cached) delegate

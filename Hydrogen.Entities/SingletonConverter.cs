@@ -4,19 +4,27 @@ using Unity.Entities;
 
 namespace Hydrogen.Entities
 {
+    public interface ISingletonConverter<T> : IComponentData
+        where T : struct, IComponentData
+    {
+        T Singleton { get; set; }
+
+        bool DontReplace { get; set; }
+    }
+
     /// <summary>
     /// Acts as a delivery mechanism for Singleton data that can be serialized to a sub-scene,
     /// and has some control over how the singleton component data is handled on load.
     /// </summary>
     /// <typeparam name="T">The Singleton <see cref="IComponentData"/> Type</typeparam>
     [Serializable]
-    public struct SingletonConverter<T> : IComponentData
+    public struct SingletonConverter<T>
         where T : struct, IComponentData
     {
         /// <summary>
         /// Singleton Component Data that will become our actual singleton.
         /// </summary>
-        public T Value;
+        public T Singleton;
         
         /// <summary>
         /// If the singleton is already loaded, don't replace it with this data.
@@ -26,12 +34,12 @@ namespace Hydrogen.Entities
         /// <summary>
         /// Constructor for creating converters via code.
         /// </summary>
-        /// <param name="value">Singleton component data value.</param>
+        /// <param name="singleton">Singleton component data value.</param>
         /// <param name="dontReplace">DontReplace setting, falls by default.</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public SingletonConverter(T value, bool dontReplace = false)
+        public SingletonConverter(T singleton, bool dontReplace = false)
         {
-            Value = value;
+            Singleton = singleton;
             DontReplace = dontReplace;
         }
 
@@ -41,7 +49,7 @@ namespace Hydrogen.Entities
         /// <param name="this">The current converter.</param>
         /// <returns>The original Singleton Component Data</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static implicit operator T(SingletonConverter<T> @this) => @this.Value;
+        public static implicit operator T(SingletonConverter<T> @this) => @this.Singleton;
 
         /// <summary>
         /// Implicitly casts the Singleton Component Data payload to a converter.

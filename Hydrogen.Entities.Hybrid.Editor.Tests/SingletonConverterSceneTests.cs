@@ -13,9 +13,7 @@ using Object = UnityEngine.Object;
 
 namespace Hydrogen.Entities.Tests
 {
-    using TimeConfigConverter = SingletonConverter<TimeConfig>;
     using LocalesRef = BlobRefData<Locales>;
-    using LocalesConverter = SingletonConverter<BlobRefData<Locales>>;
     
     [TestFixture]
     public class SingletonConverterSceneTests : SingletonConverterHybridTestFixture

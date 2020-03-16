@@ -13,27 +13,27 @@ namespace Hydrogen.Entities.Tests
 {
     public class ConvertScriptableObjectToBlobTests : ECSTestsFixture
     {
-        private const float kMeaningOfLifeFloat = 42.0f;
-        private const uint kMeaningOfLifeUInt = 42u;
-        private const string kFooText = "Lorem Ipsum";
-        private static readonly int[] sm_integers = {0, 1, 2, 3};
-        private static readonly BazData sm_testBaz = new BazData(1,2,3,4);
+        const float kMeaningOfLifeFloat = 42.0f;
+        const uint kMeaningOfLifeUInt = 42u;
+        const string kFooText = "Lorem Ipsum";
+        static readonly int[] sm_integers = {0, 1, 2, 3};
+        static readonly BazData sm_testBaz = new BazData(1,2,3,4);
 
-        private GameObjectConversionSettings MakeDefaultSettings() =>
+        GameObjectConversionSettings MakeDefaultSettings() =>
             new GameObjectConversionSettings()
             {
                 DestinationWorld = World,
                 ConversionFlags = GameObjectConversionUtility.ConversionFlags.AssignName
             };
 
-        private struct TestBlob01
+        struct TestBlob01
         {
             public BlobString Name;
             public BlobPtr<float> AFloat;
             public BlobArray<int> Ints;
         }
 
-        private class TestScriptableInterface01 : ScriptableObject, IConvertScriptableObjectToBlob<TestBlob01>
+        class TestScriptableInterface01 : ScriptableObject, IConvertScriptableObjectToBlob<TestBlob01>
         {
             public float AFloat = kMeaningOfLifeFloat;
             public int[] Integers = sm_integers;
@@ -69,21 +69,21 @@ namespace Hydrogen.Entities.Tests
             }
         }
 
-        private class TestScriptableCustomFunc : ScriptableObject
+        class TestScriptableCustomFunc : ScriptableObject
         {
             public string Foo = kFooText;
             public uint Bar = kMeaningOfLifeUInt;
             public BazData Baz = sm_testBaz;
         }
 
-        private struct TestBlob02
+        struct TestBlob02
         {
             public BlobString Foo;
             public uint Bar;
             public BlobPtr<BazData> Baz;
         }
-        
-        private class NodeDefinition : ScriptableObject, IConvertScriptableObjectToBlob<NodeBlob>
+
+        class NodeDefinition : ScriptableObject, IConvertScriptableObjectToBlob<NodeBlob>
         {
             public int Value;
             
@@ -116,7 +116,7 @@ namespace Hydrogen.Entities.Tests
             }
         }
 
-        private struct NodeBlob
+        struct NodeBlob
         {
             public BlobAssetReference<NodeBlob> Left;
             public BlobAssetReference<NodeBlob> Right;
@@ -124,7 +124,7 @@ namespace Hydrogen.Entities.Tests
         }
 
         [Serializable]
-        private struct BazData : IEquatable<BazData>
+        struct BazData : IEquatable<BazData>
         {
             public uint A;
             public uint B;
@@ -158,7 +158,7 @@ namespace Hydrogen.Entities.Tests
             }
         }
 
-        private static BlobAssetReference<TestBlob02> ConvertCustomToBlob02(
+        static BlobAssetReference<TestBlob02> ConvertCustomToBlob02(
             TestScriptableCustomFunc src,
             ScriptableObjectConversionSystem conversion)
         {
@@ -181,7 +181,7 @@ namespace Hydrogen.Entities.Tests
             return result;
         }
 
-        private static BlobAssetReference<TestBlob01> ConvertInterfaceToBlob01(
+        static BlobAssetReference<TestBlob01> ConvertInterfaceToBlob01(
             TestScriptableInterface01 src,
             ScriptableObjectConversionSystem conversion)
         {
@@ -213,20 +213,20 @@ namespace Hydrogen.Entities.Tests
             return result;
         }
 
-        private static readonly ScriptToBlobFunc<TestScriptableCustomFunc, TestBlob02> sm_convertCustomToBlob02 =
+        static readonly ScriptToBlobFunc<TestScriptableCustomFunc, TestBlob02> sm_convertCustomToBlob02 =
             ConvertCustomToBlob02;
 
-        private static readonly ScriptToBlobFunc<TestScriptableInterface01, TestBlob01> sm_convertInterfaceToBlob01 =
+        static readonly ScriptToBlobFunc<TestScriptableInterface01, TestBlob01> sm_convertInterfaceToBlob01 =
             ConvertInterfaceToBlob01;
 
-        private static void TryDisposeBlob<T>(in BlobAssetReference<T> reference)
+        static void TryDisposeBlob<T>(in BlobAssetReference<T> reference)
             where T : struct
         {
             // ReSharper disable once PossiblyImpureMethodCallOnReadonlyVariable
             if(reference.IsCreated) reference.Dispose();
         }
 
-        private void AssertPrefabCollection(EntityQuery query, int expectedCount, bool expectNoPrefabCollectionRef = false)
+        void AssertPrefabCollection(EntityQuery query, int expectedCount, bool expectNoPrefabCollectionRef = false)
         {
             Assert.IsTrue(query.CalculateEntityCountWithoutFiltering() == expectedCount);
             NativeArray<Entity> entities = query.ToEntityArray(Allocator.TempJob);
@@ -246,7 +246,7 @@ namespace Hydrogen.Entities.Tests
             }
         }
 
-        private void AssertPrefabCollection(Entity entity, bool assertNoPrefabCollection = false)
+        void AssertPrefabCollection(Entity entity, bool assertNoPrefabCollection = false)
         {
             var collectionReference = m_Manager.GetComponentData<BlobRefData<PrefabCollectionBlob>>(entity);
 
@@ -266,7 +266,7 @@ namespace Hydrogen.Entities.Tests
             }
         }
 
-        private ScriptableObjectConversionSystem m_conversion;
+        ScriptableObjectConversionSystem m_conversion;
 
         [SetUp]
         public override void Setup()

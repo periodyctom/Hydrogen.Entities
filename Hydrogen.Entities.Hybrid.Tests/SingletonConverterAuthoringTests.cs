@@ -8,7 +8,6 @@ using static UnityEngine.ScriptableObject;
 namespace Hydrogen.Entities.Tests
 {
     using LocalesRef = BlobRefData<Locales>;
-    using LocalesConverter = SingletonConverter<BlobRefData<Locales>>;
 
     [TestFixture]
     public class SingletonConverterAuthoringTests : SingletonConverterHybridTestFixture
@@ -18,7 +17,7 @@ namespace Hydrogen.Entities.Tests
         {
             var expected = new TimeConfig(60, 1.0f / 60.0f);
 
-            TimeConfigAuthoring authoring = CreateDataAuthoring<TimeConfigAuthoring, TimeConfig>(
+            var authoring = CreateDataAuthoring<TimeConfigAuthoring, TimeConfig, TimeConfigConverter>(
                 "TimeConfigAuthoring",
                 expected);
 
@@ -30,13 +29,13 @@ namespace Hydrogen.Entities.Tests
         [Test]
         public void ScriptableObjectSingleton_FromInterface_CreatesCorrectConverters()
         {
-            AssertBlobConversion(
+            AssertBlobConversion<LocalesInterfaceAuthoring, Locales, LocalesDefinition,  LocalesConverter>(
                 LocalesQueries,
                 "LocalesInterfaceAuthoring",
-                CachedCreateInterfaceAuthoring,
+                k_CachedCreateInterfaceAuthoring,
                 false,
                 CachedAssertSupportedLocales,
-                CachedAssertMatchesLocales,
+                k_CachedAssertMatchesLocales,
                 CreateInstance<LocalesDefinition>());
         }
 
@@ -46,10 +45,10 @@ namespace Hydrogen.Entities.Tests
             AssertBlobConversion(
                 LocalesQueries,
                 "LocalesInterfaceAuthoring",
-                CachedCreateCustomAuthoring,
+                k_CachedCreateCustomAuthoring,
                 false,
                 CachedAssertSupportedLocales,
-                CachedAssertMatchesLocales,
+                k_CachedAssertMatchesLocales,
                 CreateInstance<LocalesDefinition>());
         }
 
@@ -84,7 +83,7 @@ namespace Hydrogen.Entities.Tests
             LocalesQueries.AssertCounts(0, 1, 1);
 
             var singleton = LocalesQueries.Singleton.GetSingleton<LocalesRef>();
-            CachedAssertMatchesLocales.Invoke(singleton, expected);
+            k_CachedAssertMatchesLocales.Invoke(singleton, expected);
 
             prefab = TestUtilities.LoadPrefab("LocalesCustomAuthoring");
             expected = prefab.GetComponent<LocalesCustomAuthoring>().Source;
@@ -106,7 +105,7 @@ namespace Hydrogen.Entities.Tests
             LocalesQueries.AssertCounts(0, 1, 1);
 
             singleton = LocalesQueries.Singleton.GetSingleton<LocalesRef>();
-            CachedAssertMatchesLocales.Invoke(singleton, expected);
+            k_CachedAssertMatchesLocales.Invoke(singleton, expected);
 
             World.Update();
 

@@ -6,14 +6,14 @@ namespace Hydrogen.Entities.Tests
 {
     [DisallowMultipleComponent]
     [AddComponentMenu("Hidden/DontUse")]
-    public class LocalesCustomAuthoring : SingletonConvertBlobCustomAuthoring<Locales, LocalesDefinition>
+    public class LocalesCustomAuthoring : SingletonConvertBlobCustomAuthoring<Locales, LocalesDefinition, LocalesConverter>
     {
-        private ScriptToBlobFunc<LocalesDefinition, Locales> m_converterFunc;
+        ScriptToBlobFunc<LocalesDefinition, Locales> m_ConverterFunc;
 
         protected override ScriptToBlobFunc<LocalesDefinition, Locales> ScriptToBlob =>
-            m_converterFunc ?? (m_converterFunc = DoConvert);
+            m_ConverterFunc ?? (m_ConverterFunc = DoConvert);
 
-        private BlobAssetReference<Locales> DoConvert(
+        BlobAssetReference<Locales> DoConvert(
             LocalesDefinition definition,
             ScriptableObjectConversionSystem conversionSystem) =>
             SingletonConversionTestFixture.CreateLocaleData(definition.name, definition.AvailableLocales);

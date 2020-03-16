@@ -9,9 +9,7 @@ using UnityEngine.TestTools.Utils;
 
 namespace Hydrogen.Entities.Tests
 {
-    using TimeConfigConverter = SingletonConverter<TimeConfig>;
     using LocalesRef = BlobRefData<Locales>;
-    using LocalesConverter = SingletonConverter<BlobRefData<Locales>>;
 
     public class SingletonConversionTestFixture : ECSTestsFixture
     {
@@ -21,28 +19,29 @@ namespace Hydrogen.Entities.Tests
             public readonly EntityQuery PostConverted;
             public readonly EntityQuery Singleton;
 
-            private static readonly Type sm_convertedType = typeof(SingletonConverted);
+            static readonly Type sm_convertedType = typeof(SingletonConverted);
 
-            public static SingletonQueries CreateQueries<T>(EntityManager manager)
-                where T : struct, IComponentData
+            public static SingletonQueries CreateQueries<T0, T1>(EntityManager manager)
+                where T0 : struct, IComponentData
+                where T1 : struct, ISingletonConverter<T0>
             {
-                ComponentType converterTypeRO = ComponentType.ReadOnly<SingletonConverter<T>>();
+                var converterTypeRO = ComponentType.ReadOnly<T1>();
 
-                EntityQuery preConverted = manager.CreateEntityQuery(
+                var preConverted = manager.CreateEntityQuery(
                     converterTypeRO,
                     ComponentType.Exclude(sm_convertedType));
 
-                EntityQuery postConverted = manager.CreateEntityQuery(
+                var postConverted = manager.CreateEntityQuery(
                     converterTypeRO,
                     ComponentType.ReadOnly(sm_convertedType));
 
-                EntityQuery singleton = manager.CreateEntityQuery(typeof(T));
+                var singleton = manager.CreateEntityQuery(typeof(T0));
 
                 return new SingletonQueries(preConverted, postConverted, singleton);
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            private SingletonQueries(EntityQuery preConverted, EntityQuery postConverted, EntityQuery singleton)
+            SingletonQueries(EntityQuery preConverted, EntityQuery postConverted, EntityQuery singleton)
             {
                 PreConverted = preConverted;
                 PostConverted = postConverted;
@@ -70,28 +69,28 @@ namespace Hydrogen.Entities.Tests
         protected readonly Action<TimeConfig, TimeConfigConverter> CachedAssertTimeConfigs = AssertTimeConfig;
         protected readonly Action<LocalesRef, LocalesConverter> CachedAssertSupportedLocales = AssertSupportedLocales;
 
-        protected static void AssertTimeConfig(TimeConfig current, TimeConfigConverter converter)
+        protected static void AssertTimeConfig(TimeConfig current, TimeConfigConverter other)
         {
-            Assert.IsTrue(Utils.AreFloatsEqual(current.FixedDeltaTime, converter.Value.FixedDeltaTime, float.Epsilon));
-            Assert.IsTrue(current.AppTargetFrameRate == converter.Value.AppTargetFrameRate);
+            Assert.IsTrue(Utils.AreFloatsEqual(current.FixedDeltaTime, other.Singleton.FixedDeltaTime, float.Epsilon));
+            Assert.IsTrue(current.AppTargetFrameRate == other.Singleton.AppTargetFrameRate);
 
             Assert.IsTrue(Utils.AreFloatsEqual(current.FixedDeltaTime, Time.fixedDeltaTime, float.Epsilon));
             Assert.IsTrue(current.AppTargetFrameRate == (uint) Application.targetFrameRate);
         }
 
-        protected static void AssertSupportedLocales(LocalesRef current, LocalesConverter converter)
+        protected static void AssertSupportedLocales(LocalesRef current, LocalesConverter other)
         {
-            Assert.IsTrue(current.IsCreated && converter.Value.IsCreated);
+            Assert.IsTrue(current.IsCreated && other.Singleton.IsCreated);
 
-            ref Locales a = ref current.Resolve;
-            ref Locales b = ref converter.Value.Resolve;
+            ref var a = ref current.Resolve;
+            ref var b = ref other.Singleton.Resolve;
 
-            int availableLen = a.Available.Length;
+            var availableLen = a.Available.Length;
 
-            for (int i = 0; i < availableLen; i++)
+            for (var i = 0; i < availableLen; i++)
             {
-                ref BlobString aAvailable = ref a.Available[i];
-                ref BlobString bAvailable = ref b.Available[i];
+                ref var aAvailable = ref a.Available[i];
+                ref var bAvailable = ref b.Available[i];
                 Assert.IsTrue(aAvailable.ToString().Equals(bAvailable.ToString()));
             }
         }
@@ -101,10 +100,10 @@ namespace Hydrogen.Entities.Tests
         {
             base.Setup();
 
-            TimeConfigQueries = SingletonQueries.CreateQueries<TimeConfig>(m_Manager);
-            LocalesQueries = SingletonQueries.CreateQueries<LocalesRef>(m_Manager);
+            TimeConfigQueries = SingletonQueries.CreateQueries<TimeConfig, TimeConfigConverter>(m_Manager);
+            LocalesQueries = SingletonQueries.CreateQueries<LocalesRef, LocalesConverter>(m_Manager);
 
-            World world = m_Manager.World;
+            var world = m_Manager.World;
 
             var initGroup = world.GetOrCreateSystem<InitializationSystemGroup>();
             var convertGroup = world.GetOrCreateSystem<SingletonConvertGroup>();
@@ -145,30 +144,32 @@ namespace Hydrogen.Entities.Tests
             Assert.IsTrue(available.Length > 0);
 
             var builder = new BlobBuilder(Allocator.Temp);
-            ref Locales root = ref builder.ConstructRoot<Locales>();
+            ref var root = ref builder.ConstructRoot<Locales>();
             
             if(!string.IsNullOrEmpty(name) && name.Length > 0)
                 builder.AllocateString(ref root.Name, name);
             else
                 root.Name = new BlobString();
 
-            int availableLen = available.Length;
-            BlobBuilderArray<BlobString> builderArray = builder.Allocate(ref root.Available, available.Length);
+            var availableLen = available.Length;
+            var builderArray = builder.Allocate(ref root.Available, available.Length);
 
-            for (int i = 0; i < availableLen; i++)
+            for (var i = 0; i < availableLen; i++)
             {
-                ref BlobString element = ref builderArray[i];
+                ref var element = ref builderArray[i];
                 builder.AllocateString(ref element, available[i]);
             }
 
-            BlobAssetReference<Locales> refData = builder.CreateBlobAssetReference<Locales>(Allocator.Persistent);
+            var refData = builder.CreateBlobAssetReference<Locales>(Allocator.Persistent);
 
             builder.Dispose();
 
             return refData;
         }
 
-        protected static LocalesRef CreateLocaleRefData(string name, params string[] available) =>
-            new LocalesRef(CreateLocaleData(name, available));
+        protected static LocalesRef CreateLocaleRefData(string name, params string[] available)
+        {
+            return new LocalesRef(CreateLocaleData(name, available));
+        }
     }
 }
