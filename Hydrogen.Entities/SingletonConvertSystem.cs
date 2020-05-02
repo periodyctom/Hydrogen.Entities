@@ -1,3 +1,4 @@
+using System;
 using Unity.Burst;
 using Unity.Collections;
 using Unity.Entities;
@@ -14,6 +15,7 @@ namespace Hydrogen.Entities
     /// </summary>
     [UpdateInGroup(typeof(InitializationSystemGroup))]
     [UpdateAfter(typeof(SceneSystemGroup))] 
+    [Obsolete]
     // TODO: Find a better way of handling this where we don't rely on any hybrid entity assemblies.
     // SceneSystemGroup lives in Unity.Scenes.Hybrid currently.
     public sealed class SingletonConvertGroup : ComponentSystemGroup {}
@@ -23,6 +25,7 @@ namespace Hydrogen.Entities
     /// </summary>
     [UpdateInGroup(typeof(InitializationSystemGroup))]
     [UpdateAfter(typeof(SingletonConvertGroup))]
+    [Obsolete]
     public sealed class SingletonPostConvertGroup : ComponentSystemGroup {}
     
     /// <summary>
@@ -31,6 +34,7 @@ namespace Hydrogen.Entities
     /// </summary>
     /// <typeparam name="T0">Singleton Component Data type.</typeparam>
     [UpdateInGroup(typeof(SingletonConvertGroup))]
+    [Obsolete]
     public abstract class SingletonConvertSystem<T0, T1> : SystemBase
         where T0 : struct, IComponentData
         where T1 : struct, ISingletonConverter<T0>
@@ -223,6 +227,7 @@ namespace Hydrogen.Entities
     /// SingletonConverter&lt;<see cref="BlobRefData{T}"/>&gt; to a Singleton of BlobRefData&lt;<typeparamref name="T0"/>&gt;
     /// </summary>
     /// <typeparam name="T0">Singleton Blob Reference struct Type</typeparam>
+    [Obsolete]
     public abstract unsafe class SingletonBlobConvertSystem<T0, T1> : SingletonConvertSystem<BlobRefData<T0>, T1>
         where T0 : struct
         where T1 : struct, ISingletonConverter<BlobRefData<T0>>
@@ -248,6 +253,7 @@ namespace Hydrogen.Entities
     /// </summary>
     /// <typeparam name="T0">The Singleton Component Data Type</typeparam>
     [UpdateInGroup(typeof(SingletonPostConvertGroup))]
+    [Obsolete]
     public abstract class SingletonPostConvertSystem<T0, T1> : SystemBase
         where T0 : struct, IComponentData
         where T1 : struct, ISingletonConverter<T0>
@@ -301,6 +307,7 @@ namespace Hydrogen.Entities
     /// Used as a base for systems that react to changed (or unchanged) blob singleton conversions.
     /// </summary>
     /// <typeparam name="T0">The struct type the BlobAssetReference manages</typeparam>
+    [Obsolete]
     public abstract class SingletonBlobPostConvertSystem<T0, T1> : SingletonPostConvertSystem<BlobRefData<T0>, T1> 
         where T0 : struct
         where T1 : struct, ISingletonConverter<BlobRefData<T0>>

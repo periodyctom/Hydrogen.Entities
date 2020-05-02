@@ -4,6 +4,7 @@ using Unity.Entities;
 
 namespace Hydrogen.Entities
 {
+    [Obsolete]
     public interface ISingletonConverter<T> : IComponentData
         where T : struct, IComponentData
     {
@@ -17,7 +18,7 @@ namespace Hydrogen.Entities
     /// and has some control over how the singleton component data is handled on load.
     /// </summary>
     /// <typeparam name="T">The Singleton <see cref="IComponentData"/> Type</typeparam>
-    [Serializable]
+    [Serializable, Obsolete]
     public struct SingletonConverter<T>
         where T : struct, IComponentData
     {
@@ -64,15 +65,18 @@ namespace Hydrogen.Entities
     /// Tag component that indicates the converter entity has delivered the Singleton data to the conversion system and is ready to be cleaned up.
     /// <see cref="EntityQuery.GetSingleton{T}()"/> method.
     /// </summary>
+    [Obsolete]
     public struct SingletonConverted : IComponentData { }
     
     /// <summary>
     /// Tag component that indicates an Entity with the SingletonConverted tag has data that was set as the current singleton
     /// </summary>
+    [Obsolete]
     public struct SingletonChanged : IComponentData { }
     
     /// <summary>
     /// Tag component that indicates none of the processed conversions succeeded
     /// </summary>
+    [Obsolete]
     public struct SingletonUnchanged : IComponentData { }
 }

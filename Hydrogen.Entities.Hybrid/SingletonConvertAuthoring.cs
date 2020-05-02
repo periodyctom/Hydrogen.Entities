@@ -1,3 +1,4 @@
+using System;
 using Unity.Entities;
 using UnityEngine;
 
@@ -8,7 +9,7 @@ namespace Hydrogen.Entities
     /// Subclass this to handle different singleton converter and component types.
     /// </summary>
     /// <typeparam name="T0">Singleton Component Data type</typeparam>
-    [RequiresEntityConversion]
+    [RequiresEntityConversion, Obsolete]
     public abstract class SingletonConvertAuthoring<T0, T1, T2> : MonoBehaviour, IConvertGameObjectToEntity
         where T0 : struct, IComponentData
         where T2 : struct, ISingletonConverter<T0>
@@ -55,6 +56,7 @@ namespace Hydrogen.Entities
     /// Implements the simplest conversion of struct singletons.
     /// </summary>
     /// <typeparam name="T0">Component Data that is also serializable in the editor.</typeparam>
+    [Obsolete]
     public abstract class SingletonConvertDataAuthoring<T0, T1> : SingletonConvertAuthoring<T0, T0, T1>
         where T0 : struct, IComponentData
         where T1 : struct, ISingletonConverter<T0>
@@ -87,6 +89,7 @@ namespace Hydrogen.Entities
     /// </summary>
     /// <typeparam name="T0">Blob Asset struct type.</typeparam>
     /// <typeparam name="T1"><see cref="ScriptableObject"/> type that will be our source.</typeparam>
+    [Obsolete]
     public abstract class SingletonConvertBlobAuthoring<T0, T1, T2> : SingletonConvertAuthoring<BlobRefData<T0>, T1, T2>
         where T0 : struct
         where T1 : ScriptableObject
@@ -132,6 +135,7 @@ namespace Hydrogen.Entities
     /// </summary>
     /// <typeparam name="T0">The Blob asset struct type.</typeparam>
     /// <typeparam name="T1">ScriptableObject that implements the conversion interface.</typeparam>
+    [Obsolete]
     public abstract class SingletonConvertBlobInterfaceAuthoring<T0, T1, T2> : SingletonConvertBlobAuthoring<T0, T1, T2>
         where T0 : struct
         where T1 : ScriptableObject, IConvertScriptableObjectToBlob<T0>
@@ -153,6 +157,7 @@ namespace Hydrogen.Entities
     /// </summary>
     /// <typeparam name="T0">The Blob asset struct type.</typeparam>
     /// <typeparam name="T1">ScriptableObject that will be converted by the custom function.</typeparam>
+    [Obsolete]
     public abstract class SingletonConvertBlobCustomAuthoring<T0, T1, T2> : SingletonConvertBlobAuthoring<T0, T1, T2>
         where T0 : struct
         where T1 : ScriptableObject
