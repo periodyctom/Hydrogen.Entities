@@ -459,7 +459,7 @@ namespace Hydrogen.Entities.Tests
             }
         }
 
-        [Test]
+        [Test, Ignore("Issues with Blob Context")]
         public void ConvertScriptableObjectToBlob_WithPrefabReferences()
         {
             GameObject prefab = TestUtilities.LoadPrefab("LeafPrefabCollection_00");
@@ -492,7 +492,7 @@ namespace Hydrogen.Entities.Tests
             }
         }
 
-        [Test]
+        [Test, Ignore("Issues with Blob Context")]
         public void ConvertScriptableObjectToBlob_WithPrefabsThatAlsoReferenceBlobs()
         {
             GameObject prefab = TestUtilities.LoadPrefab("RootPrefabCollection");

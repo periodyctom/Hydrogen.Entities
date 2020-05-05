@@ -11,6 +11,8 @@ namespace Hydrogen.Entities
         
         [SerializeField] T m_Data;
 
+        public T Data => m_Data;
+
         public override void Perform(EntityManager manager)
         {
             var query = manager.CreateEntityQuery(k_SingletonType);
