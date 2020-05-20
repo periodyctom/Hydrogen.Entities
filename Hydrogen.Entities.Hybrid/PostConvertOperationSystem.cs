@@ -21,7 +21,7 @@ namespace Hydrogen.Entities
         {
             CompleteDependency();
             
-            var entities = m_Query.ToEntityArray(Allocator.Temp);
+            var entities = m_Query.ToEntityArray(Allocator.TempJob);
             var entitiesLength = entities.Length;
 
             for (var i = 0; i < entitiesLength; i++)
@@ -34,6 +34,8 @@ namespace Hydrogen.Entities
 
                 EntityManager.DestroyEntity(entity);
             }
+
+            entities.Dispose();
         }
     }
 }
