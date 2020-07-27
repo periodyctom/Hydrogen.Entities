@@ -93,8 +93,8 @@ namespace Hydrogen.Entities
         struct CollectCandidates : IJobChunk
         {
             public NativeList<Candidate> Candidates;
-            [ReadOnly] public ArchetypeChunkEntityType EntityType;
-            [ReadOnly] public ArchetypeChunkComponentType<T1> ConverterType;
+            [ReadOnly] public EntityTypeHandle EntityType;
+            [ReadOnly] public ComponentTypeHandle<T1> ConverterType;
             
             public void Execute(ArchetypeChunk chunk, int chunkIndex, int firstEntityIndex)
             {
@@ -131,8 +131,8 @@ namespace Hydrogen.Entities
             new CollectCandidates
             {
                 Candidates = m_Candidates,
-                EntityType = GetArchetypeChunkEntityType(),
-                ConverterType = GetArchetypeChunkComponentType<T1>(true)
+                EntityType = GetEntityTypeHandle(),
+                ConverterType = GetComponentTypeHandle<T1>(true)
             }.Run(m_PreConvertedQuery);
             
             var wasChanged = false;

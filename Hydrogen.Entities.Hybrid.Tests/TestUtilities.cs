@@ -10,8 +10,9 @@ namespace Hydrogen.Entities.Tests
         
         public static GameObject LoadPrefab(string name)
         {
-            return AssetDatabase.LoadAssetAtPath<GameObject>(
-                $"{kContentPath}{name}.prefab");
+            return null;
+            // return AssetDatabase.LoadAssetAtPath<GameObject>(
+            //     $"{kContentPath}{name}.prefab");
         }
     }
 }
