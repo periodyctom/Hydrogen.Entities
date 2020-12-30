@@ -6,7 +6,6 @@ using UnityEngine.Assertions;
 // ReSharper disable once CheckNamespace
 namespace Hydrogen.Entities.Tests
 {
-    [RequiresEntityConversion]
     [DisallowMultipleComponent]
     [AddComponentMenu("Hidden/DontUse")]
     public class PrefabCollectionBehaviour : MonoBehaviour, IDeclareReferencedPrefabs, IConvertGameObjectToEntity
@@ -21,12 +20,12 @@ namespace Hydrogen.Entities.Tests
 
         public void Convert(Entity entity, EntityManager dstManager, GameObjectConversionSystem conversionSystem)
         {
-            if(Collection == null) return;
+            if(Collection == null) 
+                return;
             
             var scriptConversion = conversionSystem.World.GetOrCreateSystem<ScriptableObjectConversionSystem>();
 
-            BlobAssetReference<PrefabCollectionBlob> prefabs =
-                scriptConversion.GetBlob<PrefabCollection, PrefabCollectionBlob>(Collection);
+            var prefabs = scriptConversion.GetBlob<PrefabCollection, PrefabCollectionBlob>(Collection);
 
             BlobRefData<PrefabCollectionBlob> @ref = default;
             @ref.Value = prefabs;
