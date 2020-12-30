@@ -28,5 +28,6 @@ This version of Hydrogen.Entities has been tested with 2019.3b4+.
 ## Document History
 | Date       | Reason                               |
 | :--------- | :----------------------------------- |
+| December 29, 2020 | Long overdue cleanup after getting rid of code rot. Several Unity DOTS features now go beyond what this API supports. |
 | December 03, 2019 | Updated after documentation improvements and hyperlink updates. |
 | October 14, 2019 | Updated after major revision to 0.2.0 |

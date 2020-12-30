@@ -42,25 +42,25 @@ namespace Hydrogen.Entities.Tests
             {
                 var builder = new BlobBuilder(Allocator.Temp);
 
-                ref TestBlob01 target = ref builder.ConstructRoot<TestBlob01>();
+                ref var target = ref builder.ConstructRoot<TestBlob01>();
 
                 if(!string.IsNullOrEmpty(name) && name.Length > 0)
                     builder.AllocateString(ref target.Name, name);
                 else
                     target.Name = new BlobString();
 
-                ref float afloat = ref builder.Allocate(ref target.AFloat);
+                ref var afloat = ref builder.Allocate(ref target.AFloat);
 
                 afloat = AFloat;
 
-                int intsLen = Integers.Length;
+                var intsLen = Integers.Length;
 
                 if (intsLen > 0)
                     builder.Construct(ref target.Ints, Integers);
                 else
                     target.Ints = new BlobArray<int>();
 
-                BlobAssetReference<TestBlob01> assetRef =
+                var assetRef =
                     builder.CreateBlobAssetReference<TestBlob01>(Allocator.Persistent);
 
                 builder.Dispose();
@@ -94,13 +94,13 @@ namespace Hydrogen.Entities.Tests
             {
                 var builder = new BlobBuilder(Allocator.Temp);
 
-                ref NodeBlob dst = ref builder.ConstructRoot<NodeBlob>();
+                ref var dst = ref builder.ConstructRoot<NodeBlob>();
 
-                BlobAssetReference<NodeBlob> left = Left != null
+                var left = Left != null
                     ? conversion.GetBlob<NodeDefinition, NodeBlob>(Left)
                     : BlobAssetReference<NodeBlob>.Null;
 
-                BlobAssetReference<NodeBlob> right = Right != null
+                var right = Right != null
                     ? conversion.GetBlob<NodeDefinition, NodeBlob>(Right)
                     : BlobAssetReference<NodeBlob>.Null;
 
@@ -108,7 +108,7 @@ namespace Hydrogen.Entities.Tests
                 dst.Right = right;
                 dst.Value = Value;
 
-                BlobAssetReference<NodeBlob> result = builder.CreateBlobAssetReference<NodeBlob>(Allocator.Persistent);
+                var result = builder.CreateBlobAssetReference<NodeBlob>(Allocator.Persistent);
                 
                 builder.Dispose();
 
@@ -148,7 +148,7 @@ namespace Hydrogen.Entities.Tests
             {
                 unchecked
                 {
-                    int hashCode = (int) A;
+                    var hashCode = (int) A;
                     hashCode = (hashCode * 397) ^ (int) B;
                     hashCode = (hashCode * 397) ^ (int) C;
                     hashCode = (hashCode * 397) ^ (int) D;
@@ -164,17 +164,17 @@ namespace Hydrogen.Entities.Tests
         {
             var builder = new BlobBuilder(Allocator.Temp);
 
-            ref TestBlob02 dst = ref builder.ConstructRoot<TestBlob02>();
+            ref var dst = ref builder.ConstructRoot<TestBlob02>();
 
             builder.AllocateString(ref dst.Foo, src.Foo);
 
             dst.Bar = src.Bar;
 
-            ref BazData bazData = ref builder.Allocate(ref dst.Baz);
+            ref var bazData = ref builder.Allocate(ref dst.Baz);
 
             bazData = src.Baz;
 
-            BlobAssetReference<TestBlob02> result = builder.CreateBlobAssetReference<TestBlob02>(Allocator.Persistent);
+            var result = builder.CreateBlobAssetReference<TestBlob02>(Allocator.Persistent);
             
             builder.Dispose();
 
@@ -187,25 +187,25 @@ namespace Hydrogen.Entities.Tests
         {
             var builder = new BlobBuilder(Allocator.Temp);
 
-            ref TestBlob01 target = ref builder.ConstructRoot<TestBlob01>();
+            ref var target = ref builder.ConstructRoot<TestBlob01>();
 
             if(!string.IsNullOrEmpty(src.name))
                 builder.AllocateString(ref target.Name, src.name);
             else
                 target.Name = new BlobString();
 
-            ref float afloat = ref builder.Allocate(ref target.AFloat);
+            ref var afloat = ref builder.Allocate(ref target.AFloat);
 
             afloat = src.AFloat;
 
-            int intsLen = src.Integers.Length;
+            var intsLen = src.Integers.Length;
 
             if (intsLen > 0)
                 builder.Construct(ref target.Ints, src.Integers);
             else
                 target.Ints = new BlobArray<int>();
 
-            BlobAssetReference<TestBlob01> result =
+            var result =
                 builder.CreateBlobAssetReference<TestBlob01>(Allocator.Persistent);
             
             builder.Dispose();
@@ -226,46 +226,6 @@ namespace Hydrogen.Entities.Tests
             if(reference.IsCreated) reference.Dispose();
         }
 
-        void AssertPrefabCollection(EntityQuery query, int expectedCount, bool expectNoPrefabCollectionRef = false)
-        {
-            Assert.IsTrue(query.CalculateEntityCountWithoutFiltering() == expectedCount);
-            NativeArray<Entity> entities = query.ToEntityArray(Allocator.TempJob);
-
-            try
-            {
-                int len = entities.Length;
-                for (int i = 0; i < len; i++)
-                {
-                    Entity entity = entities[i];
-                    AssertPrefabCollection(entity, expectNoPrefabCollectionRef);
-                }
-            }
-            finally
-            {
-                entities.Dispose();
-            }
-        }
-
-        void AssertPrefabCollection(Entity entity, bool assertNoPrefabCollection = false)
-        {
-            var collectionReference = m_Manager.GetComponentData<BlobRefData<PrefabCollectionBlob>>(entity);
-
-            Assert.IsTrue(collectionReference.IsCreated);
-
-            ref PrefabCollectionBlob blob = ref collectionReference.Resolve;
-
-            int len1 = blob.Prefabs.Length;
-            Assert.IsTrue(len1 == 2);
-
-            for (int j = 0; j < len1; j++)
-            {
-                ref Entity e = ref blob.Prefabs[j];
-                Assert.IsTrue(m_Manager.Exists(e));
-                Assert.IsTrue(m_Manager.GetComponentCount(e) > 1);
-                Assert.IsTrue(!assertNoPrefabCollection || !m_Manager.HasComponent<BlobRefData<PrefabCollectionBlob>>(e));
-            }
-        }
-
         ScriptableObjectConversionSystem m_conversion;
 
         [SetUp]
@@ -279,7 +239,7 @@ namespace Hydrogen.Entities.Tests
         public void ConvertScriptableObjectToBlob_WithInterface()
         {
             var src = ScriptableObject.CreateInstance<TestScriptableInterface01>();
-            BlobAssetReference<TestBlob01> reference = BlobAssetReference<TestBlob01>.Null;
+            var reference = BlobAssetReference<TestBlob01>.Null;
 
             try
             {
@@ -293,13 +253,13 @@ namespace Hydrogen.Entities.Tests
                 reference = m_conversion.GetBlob<TestScriptableInterface01, TestBlob01>(src);
                 Assert.IsTrue(reference.IsCreated);
 
-                ref TestBlob01 dst = ref reference.Value;
+                ref var dst = ref reference.Value;
                 // ReSharper disable once CompareOfFloatsByEqualityOperator
                 Assert.IsTrue(src.AFloat == dst.AFloat.Value);
                 Assert.IsTrue(src.name == dst.Name.ToString());
                 Assert.IsTrue(src.Integers.Length == dst.Ints.Length);
                 
-                for (int i = 0; i < 4; i++)
+                for (var i = 0; i < 4; i++)
                     Assert.IsTrue(src.Integers[i] == dst.Ints[i]);
             }
             finally
@@ -313,7 +273,7 @@ namespace Hydrogen.Entities.Tests
         public void ConvertScriptableObjectToBlob_WithFunction()
         {
             var src = ScriptableObject.CreateInstance<TestScriptableCustomFunc>();
-            BlobAssetReference<TestBlob02> reference = BlobAssetReference<TestBlob02>.Null;
+            var reference = BlobAssetReference<TestBlob02>.Null;
 
             try
             {
@@ -327,7 +287,7 @@ namespace Hydrogen.Entities.Tests
                 reference = m_conversion.GetBlob(src, sm_convertCustomToBlob02);
                 Assert.IsTrue(reference.IsCreated);
 
-                ref TestBlob02 dst = ref reference.Value;
+                ref var dst = ref reference.Value;
                 // ReSharper disable once CompareOfFloatsByEqualityOperator
                 Assert.IsTrue(src.Foo == dst.Foo.ToString());
                 Assert.IsTrue(src.Bar == dst.Bar);
@@ -346,8 +306,8 @@ namespace Hydrogen.Entities.Tests
             var original = ScriptableObject.CreateInstance<TestScriptableInterface01>();
             original.name = "Test";
             
-            BlobAssetReference<TestBlob01> interfaceTest = BlobAssetReference<TestBlob01>.Null;
-            BlobAssetReference<TestBlob01> functionTest = BlobAssetReference<TestBlob01>.Null;
+            var interfaceTest = BlobAssetReference<TestBlob01>.Null;
+            var functionTest = BlobAssetReference<TestBlob01>.Null;
             
             try
             {
@@ -362,22 +322,22 @@ namespace Hydrogen.Entities.Tests
                 interfaceTest = m_conversion.GetBlob<TestScriptableInterface01, TestBlob01>(original);
                 functionTest = m_conversion.GetBlob(original, sm_convertInterfaceToBlob01);
 
-                ref TestBlob01 interfaceBlob = ref interfaceTest.Value;
-                ref TestBlob01 functionBlob = ref functionTest.Value;
+                ref var interfaceBlob = ref interfaceTest.Value;
+                ref var functionBlob = ref functionTest.Value;
                 
                 Assert.IsTrue(interfaceBlob.Name.ToString() == functionBlob.Name.ToString());
                 Assert.IsTrue(
                     Utils.AreFloatsEqual(interfaceBlob.AFloat.Value, functionBlob.AFloat.Value, float.Epsilon));
                 Assert.IsTrue(interfaceBlob.Ints.Length == functionBlob.Ints.Length);
                 
-                for (int i = 0; i < 4; i++)
+                for (var i = 0; i < 4; i++)
                     Assert.IsTrue(interfaceBlob.Ints[i] == functionBlob.Ints[i]);
                 
                 Assert.IsTrue(interfaceBlob.Name.ToString() == original.name);
                 Assert.IsTrue(Utils.AreFloatsEqual(interfaceBlob.AFloat.Value, original.AFloat, float.Epsilon));
                 Assert.IsTrue(interfaceBlob.Ints.Length == original.Integers.Length);
                 
-                for (int i = 0; i < 4; i++)
+                for (var i = 0; i < 4; i++)
                     Assert.IsTrue(interfaceBlob.Ints[i] == original.Integers[i]);
             }
             finally
@@ -412,11 +372,11 @@ namespace Hydrogen.Entities.Tests
             d.Value = 3;
             e.Value = 4;
             
-            BlobAssetReference<NodeBlob> aBlob = BlobAssetReference<NodeBlob>.Null;
-            BlobAssetReference<NodeBlob> bBlob = BlobAssetReference<NodeBlob>.Null;
-            BlobAssetReference<NodeBlob> cBlob = BlobAssetReference<NodeBlob>.Null;
-            BlobAssetReference<NodeBlob> dBlob = BlobAssetReference<NodeBlob>.Null;
-            BlobAssetReference<NodeBlob> eBlob = BlobAssetReference<NodeBlob>.Null;
+            var aBlob = BlobAssetReference<NodeBlob>.Null;
+            var bBlob = BlobAssetReference<NodeBlob>.Null;
+            var cBlob = BlobAssetReference<NodeBlob>.Null;
+            var dBlob = BlobAssetReference<NodeBlob>.Null;
+            var eBlob = BlobAssetReference<NodeBlob>.Null;
 
             try
             {
@@ -456,81 +416,6 @@ namespace Hydrogen.Entities.Tests
                 TryDisposeBlob(cBlob);
                 TryDisposeBlob(dBlob);
                 TryDisposeBlob(eBlob);
-            }
-        }
-
-        [Test, Ignore("Issues with Blob Context")]
-        public void ConvertScriptableObjectToBlob_WithPrefabReferences()
-        {
-            GameObject prefab = TestUtilities.LoadPrefab("LeafPrefabCollection_00");
-            
-            Assert.IsNotNull(prefab);
-
-            GameObject instance = Object.Instantiate(prefab);
-
-            try
-            {
-                Assert.IsNotNull(instance);
-            }
-            catch (Exception)
-            {
-                Object.DestroyImmediate(instance);
-                throw;
-            }
-            
-            GameObjectConversionUtility.ConvertGameObjectHierarchy(instance.gameObject, MakeDefaultSettings());
-
-            EntityQuery query = m_Manager.CreateEntityQuery(ComponentType.ReadOnly<BlobRefData<PrefabCollectionBlob>>());
-            
-            try
-            {
-                AssertPrefabCollection(query, 1, true);
-            }
-            finally
-            {
-                query.Dispose();
-            }
-        }
-
-        [Test, Ignore("Issues with Blob Context")]
-        public void ConvertScriptableObjectToBlob_WithPrefabsThatAlsoReferenceBlobs()
-        {
-            GameObject prefab = TestUtilities.LoadPrefab("RootPrefabCollection");
-            
-            Assert.IsNotNull(prefab);
-
-            GameObject instance = Object.Instantiate(prefab);
-
-            try
-            {
-                Assert.IsNotNull(instance);
-            }
-            catch (Exception)
-            {
-                Object.DestroyImmediate(instance);
-                throw;
-            }
-            
-            GameObjectConversionUtility.ConvertGameObjectHierarchy(instance.gameObject, MakeDefaultSettings());
-
-            ComponentType refTypeRO = ComponentType.ReadOnly<BlobRefData<PrefabCollectionBlob>>();
-            ComponentType excludeRefType = ComponentType.Exclude<BlobRefData<PrefabCollectionBlob>>();
-            ComponentType prefabType = ComponentType.ReadOnly<Prefab>(); 
-            
-            EntityQuery liveQuery = m_Manager.CreateEntityQuery(refTypeRO);
-            EntityQuery blobPrefabQuery = m_Manager.CreateEntityQuery(refTypeRO, prefabType);
-            EntityQuery leafPrefabQuery = m_Manager.CreateEntityQuery(excludeRefType, prefabType);
-            
-            try
-            {
-                AssertPrefabCollection(liveQuery, 1);
-                AssertPrefabCollection(blobPrefabQuery, 2);
-                Assert.IsTrue(leafPrefabQuery.CalculateEntityCountWithoutFiltering() == 4);
-            }
-            finally
-            {
-                liveQuery.Dispose();
-                blobPrefabQuery.Dispose();
             }
         }
     }
